@@ -437,10 +437,11 @@ extern void cpufreq_debug_printk(unsigned int type, const char *prefix,
  *                     STATS UPDATE HELPERS                          *
  *********************************************************************/
 
-#ifdef CONFIG_MACH_SAMSUNG_LATONA
+/* Overclock from latona board */
+#ifdef CONFIG_MACH_SAMSUNG_AALTO
 
 int cpufreq_stats_update_freq_table(struct cpufreq_frequency_table *table, unsigned int cpu);
 
-#endif /* CONFIG_MACH_SAMSUNG_LATONA */
+#endif /* CONFIG_MACH_SAMSUNG_AALTO */
 
 #endif /* _LINUX_CPUFREQ_H */
