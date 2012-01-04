@@ -434,14 +434,14 @@ extern void cpufreq_debug_printk(unsigned int type, const char *prefix,
 
 
 /*********************************************************************
- *                     STATS UPDATE HELPERS                          *
+ *                 OVERCLOCK STATS UPDATE HELPER                     *
  *********************************************************************/
 
 /* Overclock from latona board */
-#ifdef CONFIG_MACH_SAMSUNG_AALTO
+#ifdef CONFIG_SAMSUNG_AALTO_OVERCLOCK_ENABLED
 
 int cpufreq_stats_update_freq_table(struct cpufreq_frequency_table *table, unsigned int cpu);
 
-#endif /* CONFIG_MACH_SAMSUNG_AALTO */
+#endif
 
 #endif /* _LINUX_CPUFREQ_H */
