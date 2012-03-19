@@ -283,6 +283,7 @@ typedef enum{
 	BT,
 	SPK_HP,
 	EXTRA_SPEAKER,
+        HP        //headphones
 }playback_device;
 
 typedef enum{
