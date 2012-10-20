@@ -1897,6 +1897,22 @@ int dss_init_overlay_managers(struct platform_device *pdev)
 	return 0;
 }
 
+int omap_dss_manager_unregister_callback(struct omap_overlay_manager *mgr,
+					 struct omapdss_ovl_cb *cb)
+{
+	unsigned long flags;
+	int r = 0;
+	spin_lock_irqsave(&dss_cache.lock, flags);
+	if (mgr->info_dirty &&
+	    mgr->info.cb.fn == cb->fn &&
+	    mgr->info.cb.data == cb->data)
+		mgr->info.cb.fn = NULL;
+	else
+		r = -EPERM;
+	spin_unlock_irqrestore(&dss_cache.lock, flags);
+	return r;
+}
+
 void dss_uninit_overlay_managers(struct platform_device *pdev)
 {
 	struct omap_overlay_manager *mgr;

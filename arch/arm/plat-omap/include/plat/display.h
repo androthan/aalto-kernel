@@ -146,6 +146,13 @@ enum omap_color_mode {
 	OMAP_DSS_COLOR_VID3_OMAP3 = OMAP_DSS_COLOR_VID2_OMAP3,
 };
 
+struct omapdss_ovl_cb {
+	/* optional callback method */
+	u32 (*fn)(void *data, int id, int status);
+	void *data;
+	u32 mask;
+};
+
 enum omap_lcd_display_type {
 	OMAP_DSS_LCD_DISPLAY_STN,
 	OMAP_DSS_LCD_DISPLAY_TFT,
@@ -533,6 +540,8 @@ struct omap_overlay_manager_info {
 	bool trans_enabled;
 
 	bool alpha_enabled;
+
+	struct omapdss_ovl_cb cb
 };
 
 struct omap_overlay_manager {
