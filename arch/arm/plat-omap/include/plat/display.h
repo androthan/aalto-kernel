@@ -144,6 +144,24 @@ enum omap_color_mode {
 		OMAP_DSS_COLOR_RGBA32 | OMAP_DSS_COLOR_RGBX32,
 
 	OMAP_DSS_COLOR_VID3_OMAP3 = OMAP_DSS_COLOR_VID2_OMAP3,
+	OMAP_DSS_COLOR_RGBA16		= 1 << 15, /* RGBA16 - 4444 */
+	OMAP_DSS_COLOR_RGBX16		= 1 << 16, /* RGBx16 - 4444 */
+	OMAP_DSS_COLOR_XRGB16_1555	= 1 << 18, /* xRGB16 - 1555 */
+};
+
+enum omapdss_completion_status {
+	DSS_COMPLETION_PROGRAMMED	= (1 << 1),
+	DSS_COMPLETION_DISPLAYED	= (1 << 2),
+
+	DSS_COMPLETION_CHANGED_SET	= (1 << 3),
+	DSS_COMPLETION_CHANGED_CACHE	= (1 << 4),
+	DSS_COMPLETION_CHANGED		= (3 << 3),
+
+	DSS_COMPLETION_RELEASED		= (15 << 5),
+	DSS_COMPLETION_ECLIPSED_SET	= (1 << 5),
+	DSS_COMPLETION_ECLIPSED_CACHE	= (1 << 6),
+	DSS_COMPLETION_ECLIPSED_SHADOW	= (1 << 7),
+	DSS_COMPLETION_TORN		= (1 << 8),
 };
 
 struct omapdss_ovl_cb {
@@ -472,6 +490,19 @@ extern const struct omap_video_timings omap_dss_pal_timings;
 extern const struct omap_video_timings omap_dss_ntsc_timings;
 #endif
 
+struct omap_dss_cpr_coefs {
+	s16 rr, rg, rb;
+	s16 gr, gg, gb;
+	s16 br, bg, bb;
+};
+
+struct omap_dss_cconv_coefs {
+	s16 ry, rcr, rcb;
+	s16 gy, gcr, gcb;
+	s16 by, bcr, bcb;
+	u16 full_range;
+} __attribute__ ((aligned(4)));
+
 struct omap_overlay_info {
 	bool enabled;
 
@@ -491,7 +522,9 @@ struct omap_overlay_info {
 	u16 out_width;	/* if 0, out_width == width */
 	u16 out_height;	/* if 0, out_height == height */
 	u8 global_alpha;
+	u8 pre_mult_alpha;
 	u16 min_x_decim, max_x_decim, min_y_decim, max_y_decim;
+	struct omap_dss_cconv_coefs cconv;
 	enum omap_overlay_zorder zorder;
 	u32 p_uv_addr;	/* for NV12 format */
 	enum device_n_buffer_type field;
@@ -541,6 +574,9 @@ struct omap_overlay_manager_info {
 
 	bool alpha_enabled;
 
+	bool cpr_enable;
+	struct omap_dss_cpr_coefs cpr_coefs;
+
 	struct omapdss_ovl_cb cb
 };
 
@@ -576,6 +612,8 @@ struct omap_overlay_manager {
 	int (*apply)(struct omap_overlay_manager *mgr);
 	int (*wait_for_go)(struct omap_overlay_manager *mgr);
 	int (*wait_for_vsync)(struct omap_overlay_manager *mgr);
+	int (*blank)(struct omap_overlay_manager *mgr, bool wait_for_vsync);
+	void (*dump_cb)(struct omap_overlay_manager *mgr, struct seq_file *s);
 
 	int (*enable)(struct omap_overlay_manager *mgr);
 	int (*disable)(struct omap_overlay_manager *mgr);
@@ -699,6 +737,8 @@ struct omap_dss_device {
 		struct s3d_disp_info s3d_info;
 		u32 width_in_mm;
 		u32 height_in_mm;
+		u32 width_in_um;
+		u32 height_in_um;
 	} panel;
 
 	struct {
@@ -796,6 +836,11 @@ struct omap_dss_driver {
 
 	int (*set_wss)(struct omap_dss_device *dssdev, u32 wss);
 	u32 (*get_wss)(struct omap_dss_device *dssdev);
+	int (*get_modedb)(struct omap_dss_device *dssdev,
+			  struct fb_videomode *modedb,
+			  int modedb_len);
+	int (*set_mode)(struct omap_dss_device *dssdev,
+			struct fb_videomode *mode);
 
 	void (*enable_device_detect)(struct omap_dss_device *dssdev, u8 enable);
 	bool (*get_device_detect)(struct omap_dss_device *dssdev);
@@ -865,6 +910,8 @@ void omap_dss_add_notify(struct omap_dss_device *dssdev,
 void omap_dss_remove_notify(struct omap_dss_device *dssdev,
 			struct notifier_block *nb);
 
+int omap_dss_manager_unregister_callback(struct omap_overlay_manager *mgr,
+					 struct omapdss_ovl_cb *cb);
 
 int omap_dss_get_num_overlay_managers(void);
 struct omap_overlay_manager *omap_dss_get_overlay_manager(int num);

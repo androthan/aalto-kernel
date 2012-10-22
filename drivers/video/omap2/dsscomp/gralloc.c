@@ -5,6 +5,7 @@
 #include <mach/tiler.h>
 #include <video/dsscomp.h>
 #include <plat/dsscomp.h>
+#include <linux/fb.h>
 #include "dsscomp.h"
 
 #ifdef CONFIG_OMAP3_ISP_RESIZER_ON_720P_VIDEO

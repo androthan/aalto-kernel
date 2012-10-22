@@ -37,7 +37,7 @@
 
 #define MODULE_NAME	"dsscomp"
 
-#include <video/omapdss.h>
+#include <plat/display.h>
 #include <video/dsscomp.h>
 #include <plat/dsscomp.h>
 #include "dsscomp.h"

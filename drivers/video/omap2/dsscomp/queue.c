@@ -25,7 +25,7 @@
 #include <linux/slab.h>
 #include <linux/ratelimit.h>
 
-#include <video/omapdss.h>
+#include <plat/display.h>
 #include <video/dsscomp.h>
 #include <plat/dsscomp.h>
 
@@ -442,12 +442,6 @@ static u32 dsscomp_mgr_callback(void *data, int id, int status)
 
 	/* get each callback only once */
 	return ~status;
-}
-
-static inline bool dssdev_manually_updated(struct omap_dss_device *dev)
-{
-	return dev->caps & OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE &&
-		dev->driver->get_update_mode(dev) != OMAP_DSS_UPDATE_AUTO;
 }
 
 /* apply composition */
