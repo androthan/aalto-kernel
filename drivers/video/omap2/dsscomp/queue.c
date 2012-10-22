@@ -760,7 +760,7 @@ void seq_print_comp(struct seq_file *s, dsscomp_t c)
 
 void dsscomp_dbg_comps(struct seq_file *s)
 {
-#ifdef CONFIG_DEBUG_FS
+#ifndef CONFIG_DEBUG_FS
 	dsscomp_t c;
 	u32 i;
 

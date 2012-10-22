@@ -423,6 +423,80 @@ static void assign_colormode_to_var(struct fb_var_screeninfo *var,
 	var->transp = color->transp;
 }
 
+int omapfb_mode_to_dss_mode(struct fb_var_screeninfo *var,
+		enum omap_color_mode *mode)
+{
+	enum omap_color_mode dssmode;
+	int i;
+
+	/* first match with nonstd field */
+	if (var->nonstd) {
+		for (i = 0; i < ARRAY_SIZE(omapfb_colormodes); ++i) {
+			struct omapfb_colormode *m = &omapfb_colormodes[i];
+			if (var->nonstd == m->nonstd) {
+				assign_colormode_to_var(var, m);
+				*mode = m->dssmode;
+				return 0;
+			}
+		}
+
+		return -EINVAL;
+	}
+
+	/* then try exact match of bpp and colors */
+	for (i = 0; i < ARRAY_SIZE(omapfb_colormodes); ++i) {
+		struct omapfb_colormode *m = &omapfb_colormodes[i];
+		if (cmp_var_to_colormode(var, m)) {
+			assign_colormode_to_var(var, m);
+			*mode = m->dssmode;
+			return 0;
+		}
+	}
+
+	/* match with bpp if user has not filled color fields
+	 * properly */
+	switch (var->bits_per_pixel) {
+	case 1:
+		dssmode = OMAP_DSS_COLOR_CLUT1;
+		break;
+	case 2:
+		dssmode = OMAP_DSS_COLOR_CLUT2;
+		break;
+	case 4:
+		dssmode = OMAP_DSS_COLOR_CLUT4;
+		break;
+	case 8:
+		dssmode = OMAP_DSS_COLOR_CLUT8;
+		break;
+	case 12:
+		dssmode = OMAP_DSS_COLOR_RGB12U;
+		break;
+	case 16:
+		dssmode = OMAP_DSS_COLOR_RGB16;
+		break;
+	case 24:
+		dssmode = OMAP_DSS_COLOR_RGB24P;
+		break;
+	case 32:
+		dssmode = OMAP_DSS_COLOR_ARGB32;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(omapfb_colormodes); ++i) {
+		struct omapfb_colormode *m = &omapfb_colormodes[i];
+		if (dssmode == m->dssmode) {
+			assign_colormode_to_var(var, m);
+			*mode = m->dssmode;
+			return 0;
+		}
+	}
+
+	return -EINVAL;
+}
+EXPORT_SYMBOL(omapfb_mode_to_dss_mode);
+
 static int fb_mode_to_dss_mode(struct fb_var_screeninfo *var,
 		enum omap_color_mode *mode)
 {
