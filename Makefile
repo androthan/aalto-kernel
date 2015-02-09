@@ -2,7 +2,7 @@ VERSION = 2
 PATCHLEVEL = 6
 SUBLEVEL = 35
 EXTRAVERSION = .7
-NAME = Yokohama
+NAME = Aiva
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
@@ -187,9 +187,15 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # "make" in the configured kernel build directory always uses that.
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
+#
+# For YP-GS1:
+# Use ARM-EABI 4.4.3 toolchain from Google Android 4.0.4 ICS sources
+# Store Android source in ~/android/system and kernel in ~/android/kernel/PROJECT
+# Jonathan Grundmann, androthan<at>gmail<dot>com, 2015
+#
 export KBUILD_BUILDHOST := $(SUBARCH)
 ARCH		?= arm
-CROSS_COMPILE	?=/opt/toolchains/arm-2010.09/bin/arm-none-eabi-
+CROSS_COMPILE	?= ../../../prebuilt/linux-x86/toolchain/arm-eabi-4.4.3/bin/arm-eabi--
 
 
 # Architecture as present in compile.h
