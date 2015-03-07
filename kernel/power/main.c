@@ -220,7 +220,7 @@ static ssize_t dvfslock_ctrl(const char *buf, size_t count)
 	if(dlevel) dlevel = 1;
 	
 	printk("+++++DBG dvfs lock level=%d, time=%d, scanVal=%08x\n",dlevel,dtime_msec, gdDvfsctrl);
-	#ifdef CONFIG_SAMSUNG_LATONA_OPP5_ENABLED
+	#ifdef CONFIG_SAMSUNG_AALTO_OPP5_ENABLED
 	omap_pm_set_min_mpu_freq(&dvfs_ctrl_device, VDD1_OPP5_FREQ);
 	#else
 	omap_pm_set_min_mpu_freq(&dvfs_ctrl_device, VDD1_OPP4_FREQ);
