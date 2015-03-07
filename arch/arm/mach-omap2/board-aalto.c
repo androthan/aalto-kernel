@@ -474,7 +474,7 @@ static struct opp_frequencies opp_freq_add_table[] __initdata = {
 #ifdef CONFIG_SAMSUNG_AALTO_OPP5_ENABLED
   {
 	.mpu = 1200000000,
-	.iva =  900000000,
+	.iva =  840000000,
 	.ena = OMAP3630_CONTROL_FUSE_OPP1_2G_VDD1,
   },
 #endif
