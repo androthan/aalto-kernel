@@ -59,7 +59,7 @@ static struct omap_device_pm_latency omap_sr_latency[] = {
 	},
 };
 
-#ifdef CONFIG_SAMSUNG_LATONA_OPP5_ENABLED
+#ifdef CONFIG_SAMSUNG_AALTO_OPP5_ENABLED
 static void cal_reciprocal(u32 sensor, u32 *sengain, u32 *rnsen)
 {
 	u32 gn, rn, mul;
@@ -144,9 +144,9 @@ static void __init sr_read_efuse(struct omap_sr_dev_data *dev_data,
 				__raw_readb(ctrl_base + offset + 1) << 8 |
 				__raw_readb(ctrl_base + offset + 2) << 16;
 		} else {
-#ifdef CONFIG_SAMSUNG_LATONA_OPP5_ENABLED
+#ifdef CONFIG_SAMSUNG_AALTO_OPP5_ENABLED
 			if (i == 4) {
-				// The Latona board does not have an eFuse for OPP5.
+				// Samsung Aalto (YP-GS1) board does not have an eFuse for OPP5.
 				// We have to calculate a rough approximation of the nValue for this OPP.
 				dev_data->volt_data[i].sr_nvalue = cal_opp5_nvalue(2025, 1750);
 			} else {
