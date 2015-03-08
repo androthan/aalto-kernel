@@ -227,7 +227,7 @@ struct omap_opp *opp_find_freq_ceil(struct device *dev, unsigned long *freq)
 {
 	struct device_opp *dev_opp;
 	struct omap_opp *temp_opp, *opp = ERR_PTR(-ENODEV);
-	unsigned long found_freq = 0;
+	unsigned long req_freq = *freq / 1000000;
 
 	dev_opp = find_device_opp(dev);
 	if (IS_ERR(dev_opp))
@@ -235,31 +235,15 @@ struct omap_opp *opp_find_freq_ceil(struct device *dev, unsigned long *freq)
 
 	list_for_each_entry(temp_opp, &dev_opp->opp_list, node) {
 		if (temp_opp->enabled) {
-			if (!found_freq) {
-			        /*
-			         * Have not yet found one higher than requested,
-			         * so take the first higher one we find.
-			         */
-			        if (temp_opp->rate >= *freq) {
-			                opp = temp_opp;
-			                found_freq = opp->rate;
-			        }
-			} else {
-			        /*
-			         * Have found a higher one than requested, but
-			         * is this one lower than what we found so
-			         * far and still higher than requested ?
-			         */
-			        if ((temp_opp->rate >= *freq) &&
-			            (temp_opp->rate < found_freq)) {
-			                opp = temp_opp;
-			                found_freq = opp->rate;
-			        }
+			unsigned long rate = temp_opp->rate / 1000000;
+
+			if (rate >= req_freq) {
+				opp = temp_opp;
+				*freq = opp->rate;
+				break;
 			}
 		}
 	}
-	if (found_freq)
-	        *freq = opp->rate;
 
 	return opp;
 }
@@ -295,39 +279,23 @@ struct omap_opp *opp_find_freq_floor(struct device *dev, unsigned long *freq)
 {
 	struct device_opp *dev_opp;
 	struct omap_opp *temp_opp, *opp = ERR_PTR(-ENODEV);
-	unsigned long found_freq = 0;
+	unsigned long req_freq = *freq / 1000000;
 
 	dev_opp = find_device_opp(dev);
 	if (IS_ERR(dev_opp))
 		return opp;
 
-	list_for_each_entry(temp_opp, &dev_opp->opp_list, node) {
+	list_for_each_entry_reverse(temp_opp, &dev_opp->opp_list, node) {
 		if (temp_opp->enabled) {
-			if (!found_freq) {
-				/*
-				 * Have not yet found one lower than requested,
-				 * so take the first lower one we find.
-				 */
-				if (temp_opp->rate <= *freq) {
-					opp = temp_opp;
-					found_freq = opp->rate;
-				}
-			} else {
-				/*
-				 * Have found a lower one than requested, but
-				 * is this one higher than what we found so
-				 * far and still less than requested ?
-				 */
-				if ((temp_opp->rate <= *freq) &&
-				    (temp_opp->rate > found_freq)) {
-					opp = temp_opp;
-					found_freq = opp->rate;
-				}
+			unsigned long rate = temp_opp->rate / 1000000;
+
+			if (rate <= req_freq) {
+				opp = temp_opp;
+				*freq = opp->rate;
+				break;
 			}
 		}
 	}
-	if (found_freq)
-		*freq = opp->rate;
 
 	return opp;
 }
@@ -533,14 +501,20 @@ int opp_add(const struct omap_opp_def *opp_def)
 		return -ENOMEM;
 	omap_opp_populate(new_opp, opp_def, dev_opp);
 
-	/* Add OPP to list */
+	/* Insert new OPP in order of increasing frequency */
 	head = &dev_opp->opp_list;
-	list_add_tail(&new_opp->node, head);
+	list_for_each_entry_reverse(opp, &dev_opp->opp_list, node) {
+		if (new_opp->rate >= opp->rate) {
+			head = &opp->node;
+			break;
+		}
+	}
+	list_add(&new_opp->node, head);
 	dev_opp->opp_count++;
 	if (new_opp->enabled)
 		dev_opp->enabled_opp_count++;
 
-	/* Set OPP IDs */
+	/* renumber (deprecated) OPP IDs based on new order */
 	i = 0;
 	list_for_each_entry(opp, &dev_opp->opp_list, node)
 		opp->opp_id = i++;

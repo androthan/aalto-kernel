@@ -562,13 +562,6 @@ void omap_pm_dsp_set_min_opp(u8 opp_id)
 	if (!dsp_freq_table)
 		if (initialize_tables())
 			return;
-#if 0
-	if (cpu_is_omap3630()) {
-	        /* if the DSP is OPP5 and its freq is 65MHz, then set to OPP1 */
-	        if (dsp_freq_table[dsp_req_id].frequency == 65000)
-	                dsp_req_id = 0;
-	}
-#endif 
 
 	/*
 	 *
@@ -583,68 +576,14 @@ void omap_pm_dsp_set_min_opp(u8 opp_id)
 	 * if it is higher than the current OPP clock rate.
 	 *
 	 */
-
-	pr_debug("OMAP PM: Requested dfreq/mfreq: %d/%d. didx/midx: %d/%d\n",
-	        dsp_freq_table[dsp_req_id].frequency,
-	        mpu_freq_table[mpu_req_id].frequency,
-	        dsp_req_id, mpu_req_id);
-
-	if (dsp_freq_table[dsp_req_id].frequency >
-	        dsp_freq_table[mpu_req_id].frequency) {
-		/*
-		 * Ensure that this request is not conflicting with cpufreq
-		 * constraints. If that is the case, cpufreq wins.
-		 */
-		struct cpufreq_policy policy;
-		cpufreq_get_policy(&policy, 0);
-
-		if (mpu_freq_table[dsp_req_id].frequency < policy.min) {
-			while (mpu_freq_table[dsp_req_id].frequency < policy.min && dsp_req_id < ft_count) {
-				dsp_req_id = dsp_req_id + 1;
-			}
-		} else if (mpu_freq_table[dsp_req_id].frequency > policy.max) {
-			while (mpu_freq_table[dsp_req_id].frequency > policy.max && dsp_req_id > 0) {
-				dsp_req_id = dsp_req_id - 1;
-			}
-		}
-		/*
-		 * cpufreq check end
-		 */
-
+	if (dsp_req_id > mpu_req_id)
 		selopp = dsp_req_id;
-	} else {
-		/*
-		 * Ensure that this request is not conflicting with cpufreq
-		 * constraints. If that is the case, cpufreq wins.
-		 */
-		struct cpufreq_policy policy;
-		cpufreq_get_policy(&policy, 0);
-
-		if (mpu_freq_table[mpu_req_id].frequency < policy.min) {
-			while (mpu_freq_table[mpu_req_id].frequency < policy.min && mpu_req_id < ft_count) {
-				mpu_req_id = mpu_req_id + 1;
-			}
-		} else if (mpu_freq_table[mpu_req_id].frequency > policy.max) {
-			while (mpu_freq_table[mpu_req_id].frequency > policy.max && mpu_req_id > 0) {
-				mpu_req_id = mpu_req_id - 1;
-			}
-		}
-		/*
-		 * cpufreq check end
-		 */
-
+	else
 		selopp = mpu_req_id;
-	}
 
 	/* Is a change requested? */
-	if (currspeed == dsp_freq_table[selopp].frequency) {
-	        pr_debug("OMAP PM: No freq change dfreq/mfreq: %d/%d. "
-	        "didx/midx: %d/%d\n",
-	        dsp_freq_table[selopp].frequency,
-	        mpu_freq_table[selopp].frequency,
-	        dsp_req_id, mpu_req_id);
+	if (currspeed == dsp_freq_table[selopp].frequency)
 		return;
-	}
 
 	r = omap_device_set_rate(mpu_dev, mpu_dev,
 				mpu_freq_table[selopp].frequency * 1000);
@@ -653,10 +592,6 @@ void omap_pm_dsp_set_min_opp(u8 opp_id)
 	else
 		omap_device_set_rate(iva_dev, iva_dev,
 				dsp_freq_table[selopp].frequency * 1000);
-
-	pr_debug("OMAP PM: Set dfreq/mfreq: %d/%d\n",
-	        dsp_freq_table[selopp].frequency,
-	        mpu_freq_table[selopp].frequency);
 }
 
 
@@ -766,10 +701,6 @@ void omap_pm_cpu_set_freq(unsigned long f)
 		}
 	}
 #endif
-
-	pr_debug("OMAP_PM: CPU set frequency - dsp/mpu: %d/%d\n",
-	        dsp_freq_table[mpu_req_id].frequency,
-	        mpu_freq_table[mpu_req_id].frequency);
 }
 
 unsigned long omap_pm_cpu_get_freq(void)
@@ -874,24 +805,10 @@ int omap_pm_set_min_mpu_freq(struct device *dev, unsigned long f)
 	/* Save the current constraint */
 	old_max_level = mpu_tput->max_level;
 
-	if (f == -1) {
+	if (f == -1)
 		remove_req_tput(dev, mpu_tput);
-	} else {
-		struct cpufreq_policy policy;
-
-		cpufreq_get_policy(&policy, 0);
-
-		/*
-		 * Ensure that this request is not conflicting with cpufreq
-		 * constraints. If that is the case, cpufreq wins.
-		 */
-		if ((f/1000) < policy.min)
-			f = policy.min * 1000;
-		if ((f/1000) > policy.max)
-			f = policy.max * 1000;
-
+	else
 		add_req_tput(dev, f, mpu_tput);
-	}
 
 	/* Find max constraint after the operation */
 	max_lookup(mpu_tput);

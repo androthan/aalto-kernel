@@ -20,13 +20,6 @@
 #include <linux/kobject.h>
 #include <linux/spinlock.h>
 #include <linux/notifier.h>
-/* Overclocking ported from Latona board (thanks to XDA-Bam) */
-#ifdef CONFIG_SAMSUNG_AALTO_OVERCLOCK_ENABLED
-#include <linux/err.h>
-#endif /* CONFIG_SAMSUNG_AALTO_OVERCLOCK_ENABLED */
-#ifdef CONFIG_SAMSUNG_AALTO_OVERCLOCK_ENABLED
-#include <linux/err.h>
-#endif
 #include <asm/cputime.h>
 
 static spinlock_t cpufreq_stats_lock;
@@ -359,27 +352,6 @@ static struct notifier_block notifier_policy_block = {
 static struct notifier_block notifier_trans_block = {
 	.notifier_call = cpufreq_stat_notifier_trans
 };
-
-/* Overclock stats update helper */
-#ifdef CONFIG_SAMSUNG_AALTO_OVERCLOCK_ENABLED
-int cpufreq_stats_update_freq_table(struct cpufreq_frequency_table *table, unsigned int cpu)
-{
-	unsigned int i;
-	struct cpufreq_stats *stat = per_cpu(cpufreq_stats_table, cpu);
-
-	if(IS_ERR(table) || !stat)
-		return 0;
-
-	for (i = 0; table[i].frequency != CPUFREQ_TABLE_END && i < stat->max_state; i++) {
-		unsigned int freq = table[i].frequency;
-		if (freq == CPUFREQ_ENTRY_INVALID)
-			continue;
-		stat->freq_table[i] = freq;
-	}
-
-	return 1;
-}
-#endif
 
 static int __init cpufreq_stats_init(void)
 {

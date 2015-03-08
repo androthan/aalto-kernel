@@ -296,16 +296,6 @@ config SAMSUNG_REL_HW_REV
 	depends on MACH_OMAP_SAMSUNG && SAMSUNG_HW_REL_BOARD
 	default 0
 
-config SAMSUNG_AALTO_OVERCLOCK_ENABLED
-	bool "Enable overclocking and voltage control sysfs interfaces for Aalto Board"
-	depends on MACH_SAMSUNG_AALTO
-	default n
-
-config SAMSUNG_AALTO_OPP5_ENABLED
-	bool "Enable fifth operating point (1.2 GHz) for Aalto Board"
-	depends on MACH_SAMSUNG_AALTO
-	default n
-
 config SAMSUNG_CONSOLE_UART
 	int "used console uart port"
         default 3
