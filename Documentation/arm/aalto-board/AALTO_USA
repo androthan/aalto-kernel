@@ -1,0 +1,29 @@
+------------------------------------------------
+---About CONFIG_AALTO_USA configuration entry---
+------------------------------------------------
+
+If the variable CONFIG_AALTO_USA will be set to "y" the following hardware enhancements for the US version of the Samsung Aalto board will be enabled. For detailed information look into the specified files.
+
+drivers/input/touchscreen/zinitix_touch.c: support for capacitive home button (KEY_HOME value added)
+drivers/input/touchscreen/zinitix_touch.h: support for capacitive home button (Set 3 virtual keys)
+drivers/media/video/s5k5bbgx.h: optimized values for the US camera chip (enocders/decoders)
+drivers/media/video/sr030pc30_tune.h: optimized values for the US camera chip
+sound/soc/codecs/wm1811.c: support for voice search (?) (timeout set to 200 ms)
+drivers/video/omap2/displays/panel-ILI9486.c: disabled gamma test (?)
+
+##########
+
+A modification looks like:
+#ifdef AALTO_USA
+_code_
+#else/endif
+
+##########
+
+Based on the official Samsung opensource releases (opensource.samsung.com/YP_GS1_WW_OPENSOURCE)
+
+##########
+
+ANDROTHAN
+E: androthan<at>gmail<dot>com
+Y: 2015

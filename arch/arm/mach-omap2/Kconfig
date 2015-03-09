@@ -338,6 +338,12 @@ config SAMSUNG_USE_SEC_LOG_BUF
 		This feature stores all serial log messages into the
 		SEC_LOG_BUF area.
 
+config AALTO_USA
+        bool "Enhanced hardware support for Aalto board US (YP-GS1/XAA)"
+        default n
+        help
+                For more information view Documentation/arm/aalto-board/AALTO_USA.
+
 endmenu
 
 ## OMAP-Samsung Specific Configurations <<<END]]
