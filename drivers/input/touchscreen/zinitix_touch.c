@@ -1,3 +1,4 @@
+/* Zinitix touchscreen driver for Samsung Aalto board */
 /* 
  *
  * Zinitix touch driver
@@ -107,6 +108,7 @@
 #include "zinitix_touch.h"
 
 #if	BT4x2_Series
+/* TODO: contact Samsung for correct firmware file (zinitix_touch_firmware_usa.h) for AALTO_US */
 #include "zinitix_touch_firmware_F12.h"
 #include "zinitix_touch_reg_data.h"
 #endif
@@ -286,8 +288,12 @@ static struct i2c_device_id zinitix_idtable[] = {
     { }   
 };
 
-
+/* AALTO_USA: Support for capacitive home button */
+#ifdef CONFIG_AALTO_USA
+u32 BUTTON_MAPPING_KEY[SUPPORTED_BUTTON_NUM] = {KEY_MENU, KEY_BACK, KEY_HOME};
+#else
 u32 BUTTON_MAPPING_KEY[SUPPORTED_BUTTON_NUM] = {KEY_MENU, KEY_BACK};	//SEC_DRIVER
+#endif
 
 // define sub functions
 //==================================================================

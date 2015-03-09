@@ -36,7 +36,12 @@
 #define	REAL_SUPPORTED_FINGER_NUM			5
 
 // max 8
+/* AALTO_USA: support for capacitive home button (button_num) */
+#ifdef CONFIG_AALTO_USA
+#define	SUPPORTED_BUTTON_NUM			3
+#else
 #define	SUPPORTED_BUTTON_NUM			2
+#endif
 
 // Thread or Workqueue : workqueue is recommended
 #define	USE_THREAD_METHOD	0	// 1 = thread, 0 = workqueue
