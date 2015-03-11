@@ -1,3 +1,20 @@
+Samsung Opensource Stock Kernel for YP-GS1 [US]
+
+These are the latest official Samsung kernel Sources for the Samsung Galaxy Player 3.6.
+For the kernel source for the european/worldwide YP-GS1, please switch to branch "samsung-opensource".
+--
+Kernel version: 2.6.35.7
+Device: YP-GS1/XAA (United States of America)
+Compatible OSs: Android 2.3.x "Gingerbread"
+Unmodified: YES
+Source: SOSRC - opensource.samsung.com 
+Year (release/last update): 2011(DEC)/2011 (DEC)
+Board name(Dev name): aalto
+Home button type: touch
+----
+Read "INSTRUCTIONS" file for building the kernel.
+
+------------------------------------------------
 	Linux kernel release 2.6.xx <http://kernel.org/>
 
 These are the release notes for Linux version 2.6.  Read them carefully,
