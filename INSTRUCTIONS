@@ -1,3 +1,4 @@
 Instructions will be added later.
 
 Defconfig to use: "aalto_defconfig"
+Defconfig for US device: "aalto-usa_defconfig"
