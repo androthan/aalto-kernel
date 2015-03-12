@@ -21,9 +21,6 @@
 
 #include<linux/videodev2.h>
 
-
-
-
 #ifndef S5K5BBGX_H
 #define S5K5BBGX_H
 
@@ -1348,7 +1345,7 @@ static const u32 mode_sensor_init[] = {
 0x0F120001,
 0x00287000,
 0x002A040E,
-0x0F120003, //STBY TnP enable setting STBY TnP enable setting [0] bit 는 STBY enable,[1] bit 는 STBY 복구시 이전에 올린 TnP 도 복구하는 on/off bit
+0x0F120003, //STBY TnP enable setting STBY TnP enable setting [0] bit \B4\C2 STBY enable,[1] bit \B4\C2 STBY \BA\B9\B1\B8\BD\C3 \C0\CC\C0\FC\BF\A1 \BF첩\B0 TnP \B5\B5 \BA\B9\B1\B8\C7求\C2 on/off bit
 0xFFFE000A,
 //H-Digital binning & V-PLA
 0x002A1218,
@@ -1363,7 +1360,7 @@ static const u32 mode_sensor_init[] = {
 0x0F120006, // not use binninb block 0x0005 ,use binnin blcok 0x0006
 0x0F120000, // 0x0000 , 0x0000
 0xFFFE000A,
-// FILESAVE('E:\0_작업장\02_5BB평가\0206\frame_.jpg',5)
+// FILESAVE('E:\0_\C0訪\F7\C0\E5\02_5BB\C6\F2\B0\A1\0206\frame_.jpg',5)
 // Backup Register
 0x002A0416,
 0x0F12F400, 	//skl_usStbyBackupReg[0][0]
@@ -3025,9 +3022,9 @@ static const u32 mode_sensor_init[] = {
 //===================================================================
 0x00287000,
 0x002A10B8, 
-0x0F120300,    //bp_uMaxBrightnessFactor	(Max 밝기 증가)
+0x0F120300,    //bp_uMaxBrightnessFactor	(Max \B9\E0\B1\E2 \C1\F5\B0\A1)
 0x002A10BE,
-0x0F120300,    //bp_uMinBrightnessFactor (Min 밝기 증가)
+0x0F120300,    //bp_uMinBrightnessFactor (Min \B9\E0\B1\E2 \C1\F5\B0\A1)
 // AFIT by Normalized Brightness Tuning parameter
 0x002A3780,
 0x0F120000, // on/off AFIT by NB option 0000 : Ni  0001:Nb
