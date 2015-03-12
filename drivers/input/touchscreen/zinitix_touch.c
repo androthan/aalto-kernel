@@ -111,7 +111,7 @@
 #ifdef CONFIG_AALTO_USA
 #include "zinitix_touch_firmware_aalto-usa.h"  //AALTO_USA: firmware for capacitive home button
 #else
-#include "zinitix_touch_firmware_aalto-ww.h"
+#include "zinitix_touch_firmware_aalto-eu.h" //Touch register chip firmware for the international version
 #endif
 #include "zinitix_touch_reg_data.h"
 #endif
