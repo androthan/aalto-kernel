@@ -108,8 +108,11 @@
 #include "zinitix_touch.h"
 
 #if	BT4x2_Series
-/* TODO: contact Samsung for correct firmware file (zinitix_touch_firmware_usa.h) for AALTO_US */
-#include "zinitix_touch_firmware_F12.h"
+#ifdef CONFIG_AALTO_USA
+#include "zinitix_touch_firmware_aalto-usa.h"  //AALTO_USA: firmware for capacitive home button
+#else
+#include "zinitix_touch_firmware_aalto-ww.h"
+#endif
 #include "zinitix_touch_reg_data.h"
 #endif
 
