@@ -937,10 +937,12 @@ static void lcd_chk_work_handler(struct work_struct *work)
 			aat1402_set_brightness();
 			printk("%s: reset lcd!! - \n", __func__);
 		}
+#ifndef CONFIG_AALTO_USA	//AALTO_USA: seems not to work, so disable it for the american variant
 		else
 		{
 			lcd_gamma_test();
 		}
+#endif
 	}
 
 	schedule_delayed_work(&lcd_chk_work, HZ*5);
