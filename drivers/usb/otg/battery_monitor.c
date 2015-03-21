@@ -28,7 +28,6 @@
 #include <linux/err.h>
 #include <linux/delay.h>
 #include <linux/mutex.h>
-#include <linux/slab.h>
 #include <plat/omap3-gptimer12.h>
 #include "common.h"
 
@@ -49,21 +48,7 @@
 #define VSEL_VINTANA2_2V75  0x01
 #define CARKIT_ANA_CTRL     0xBB
 #define SEL_MADC_MCPC       0x08
-
-#define TWL_MODULE_PM_RECEIVER 0x15
-#define TWL4030_VMMC2_DEV_GRP		0x2B
-#define TWL4030_VMMC2_DEDICATED		0x2E
-
-#define	BATT_AVER_PER	30
-
-#define	BATT_VOL_AVG		0
-#define	BATT_VOL_ADC_AVG	1
-#define	BATT_TEMP_AVG		2
-#define	BATT_TEMP_ADC_AVG	3
-#define	BATT_MEASUREMENT	4
-
 //#define _OMS_FEATURES_ // CHINA BORQS CONCEPTS
-#define CONFIG_SEC_BATTERY_USE_RECOVERY_MODE
 
 static DEFINE_MUTEX( battery_lock );
 
@@ -110,21 +95,6 @@ struct battery_device_config
     int TEMP_ADC_PORT;
 };
 
-typedef struct {
-	int msize;
-	int mindex;
-	int data_window[BATT_AVER_PER];
-	int sum_data;
-	int avg_data;
-}BATTERY_AVG;
-
-static BATTERY_AVG battery_avg[BATT_MEASUREMENT] = {
-	{0, 0, {0,},0, 0},
-	{0, 0, {0,},0, 0},
-	{0, 0, {0,},0, 0},
-	{0, 0, {0,},0, 0},
-};
-
 struct battery_device_info 
 {
     struct device *dev;
@@ -159,13 +129,6 @@ SEC_battery_charger_info *get_sec_bci( void )
     return &sec_bci;
 }
 
-static int avr_vol = 0;
-static int avr_vol_adc = 0;
-static int avr_temp = 0;
-static int avr_temp_adc = 0;
-
-static int jep01 = 0;
-
 // Prototype
        int _charger_state_change_( int , int, bool );
        int _low_battery_alarm_( void );
@@ -176,12 +139,11 @@ static int turn_resources_on_for_adc( void );
 static int get_elapsed_time_secs( unsigned long long * );
 static int t2adc_to_temperature( int , int );
 static int do_fuelgauge_reset( void );
-static int get_battery_level_adc( bool flag );
+static int get_battery_level_adc( void );
 static int get_battery_level_ptg( void );
 static int get_system_temperature( bool );
 static int get_charging_current_adc_val( void );
 static int check_full_charge_using_chg_current( int );
-static int check_full_charge_using_chg_current2( int );
 static void get_system_status_in_sleep( int *, int *, int *, int * );
 static int battery_monitor_core( bool );
 static void battery_monitor_work_handler( struct work_struct * );
@@ -205,22 +167,13 @@ extern void charger_exit( void );
 extern int _battery_state_change_( int category, int value, bool is_sleep );
 extern int _check_full_charge_dur_sleep_( void );
 extern int _cable_status_now_( void );
-extern int microusb_enable(void);
 
 // Fuel Guage
 extern int fuelgauge_init( void );
 extern void fuelgauge_exit( void );
 extern int fuelgauge_quickstart( void );
-extern int get_fuelgauge_adc_value( int count, bool is_sleep, bool flag );
+extern int get_fuelgauge_adc_value( int count, bool is_sleep );
 extern int get_fuelgauge_ptg_value( bool is_sleep );
-//+ phill-it: 20110908
-#ifdef __BATTERY_COMPENSATION__
-extern void adcfg_set_compensate(int mode,int offset,int compensate_value);
-#endif
-
-// MAX14577
-extern int check_full_charge_current(bool is_sleep);
-extern void MD_AL25_ServiceStateMachine( void );
 
 #if 0
 extern int update_rcomp_by_temperature(int temp);
@@ -242,8 +195,6 @@ static int boot_monitor_count = 0;
 
 int stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_MAX;
 int recover_temperature_overheat = CHARGE_RECOVER_TEMPERATURE_MAX;
-int stop_temperature_cold = CHARGE_STOP_TEMPERATURE_MIN;
-int recover_temperature_cold = CHARGE_RECOVER_TEMPERATURE_MIN;
 
 #ifdef CONFIG_SEC_BATTERY_USE_RECOVERY_MODE
 static int recovery_mode = 0;
@@ -274,9 +225,7 @@ static ssize_t store_batt_monitor_temp(struct kobject *kobj,
     
     sscanf( buf, "%d", &flag );
 
-#ifdef FCHG_DBG
     printk("[BM] change value %d\n",flag);
-#endif
 
     sec_bci.battery.support_monitor_temp = flag;
     sec_bci.battery.support_monitor_timeout = flag;
@@ -292,64 +241,24 @@ static ssize_t store_batt_boot_complete(struct kobject *kobj,
     int flag;
 
     sscanf( buf, "%d", &flag );
-#ifdef FCHG_DBG
     printk("[BM] boot complete flag:%d, buf:%s, size:%d\n",flag, buf, size);
-#endif
 
     boot_complete = true;
 
     return size;
 }
 
-static ssize_t store_batt_cal(struct kobject *kobj,
-                    struct kobj_attribute *attr,
-                    const char *buf, size_t size)
-{
-	int flag;
-
-    sscanf( buf, "%d", &flag );
-
-#ifdef FCHG_DBG
-    printk("[BM] Battery ADC Calibration Constant = %d\n", flag);
-#endif
-
-	sec_bci.battery.battery_cal = flag;
-
-    return size;
-}
-
-/*
-__ATTR_SHOW_CALLBACK( show_batt_vol, sec_bci.battery.battery_level_vol )
-__ATTR_SHOW_CALLBACK( show_batt_vol_adc, sec_bci.battery.battery_level_vol_adc )
-__ATTR_SHOW_CALLBACK( show_batt_temp, sec_bci.battery.battery_temp * 10 )
-__ATTR_SHOW_CALLBACK( show_batt_temp_adc, sec_bci.battery.battery_temp_adc )
-*/
-__ATTR_SHOW_CALLBACK( show_batt_vol, get_battery_level_adc(0) )
-__ATTR_SHOW_CALLBACK( show_batt_vol_adc, get_battery_level_adc(1) )
+__ATTR_SHOW_CALLBACK( show_batt_vol, get_battery_level_adc() )
+__ATTR_SHOW_CALLBACK( show_batt_vol_adc, 0 )
 __ATTR_SHOW_CALLBACK( show_batt_temp, get_system_temperature( TEMP_DEG ) * 10 )
 __ATTR_SHOW_CALLBACK( show_batt_temp_adc, get_system_temperature( TEMP_ADC ) )
-
 __ATTR_SHOW_CALLBACK( show_batt_v_f_adc, 0 )
-//__ATTR_SHOW_CALLBACK( show_batt_capacity, sec_bci.battery.battery_level_ptg )
-
-
-__ATTR_SHOW_CALLBACK( show_batt_capacity, sec_bci.battery.battery_level_ptg)
-//__ATTR_SHOW_CALLBACK( show_batt_capacity, get_battery_level_ptg() )
+__ATTR_SHOW_CALLBACK( show_batt_capacity, get_battery_level_ptg() )
 __ATTR_SHOW_CALLBACK( do_batt_fuelgauge_reset, do_fuelgauge_reset() )
 __ATTR_SHOW_CALLBACK( show_batt_monitor_temp, get_batt_monitor_temp() )
 __ATTR_SHOW_CALLBACK( show_batt_temp_check, sec_bci.battery.battery_health)
-__ATTR_SHOW_CALLBACK( show_batt_full_check, ((sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL) || sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL)?1:0)
-
+__ATTR_SHOW_CALLBACK( show_batt_full_check, (sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL)?1:0)
 __ATTR_SHOW_CALLBACK( show_charging_source, sec_bci.charger.cable_status )
-
-__ATTR_SHOW_CALLBACK( show_batt_vol_aver, avr_vol )
-__ATTR_SHOW_CALLBACK( show_batt_vol_adc_aver, avr_vol_adc )
-__ATTR_SHOW_CALLBACK( show_batt_temp_aver, avr_temp * 10 )
-__ATTR_SHOW_CALLBACK( show_batt_temp_adc_aver, avr_temp_adc )
-
-__ATTR_SHOW_CALLBACK( show_batt_cal, sec_bci.battery.battery_cal )
-//__ATTR_SHOW_CALLBACK( show_batt_vol_adc_cal, avr_vol_adc + sec_bci.battery.battery_cal )
-//__ATTR_SHOW_CALLBACK( show_batt_vol_cal, avr_vol + sec_bci.battery.battery_cal )
 
 #ifdef _OMS_FEATURES_
 __ATTR_SHOW_CALLBACK( show_batt_vol_toolow, sec_bci.battery.battery_vol_toolow )
@@ -392,15 +301,6 @@ static struct kobj_attribute batt_sysfs_testmode[] = {
     __ATTR( batt_temp_check, 0644, show_batt_temp_check, NULL ),
     __ATTR( batt_full_check, 0644, show_batt_full_check, NULL ),    
     __ATTR( charging_source, 0644, show_charging_source, NULL ), 
-
-    __ATTR( batt_vol_aver, 0644, show_batt_vol_aver, NULL ),
-    __ATTR( batt_vol_adc_aver, 0644, show_batt_vol_adc_aver, NULL ),
-    __ATTR( batt_temp_aver, 0644, show_batt_temp_aver, NULL ),
-    __ATTR( batt_temp_adc_aver, 0644, show_batt_temp_adc_aver, NULL ),
-
-    __ATTR( batt_cal, 0644, show_batt_cal, store_batt_cal ),
-//    __ATTR( batt_vol_adc_cal, 0644, show_batt_vol_adc_cal, NULL ),
-//    __ATTR( batt_vol_cal, 0644, show_batt_vol_cal, NULL ),
 };
 
 /* Event logging */
@@ -410,8 +310,6 @@ enum{
 	MP3 = 0, TALK_WCDMA, TALK_GSM, DATA_CALL, VT_CALL, CAMERA_PREVIEW, CAMERA_RECORDING, 
 	VIDEO, G_MAP, E_BOOK, BT_CALL, WAP_BROWSING, WIFI_BROWSING, BROWSER, GAME
 };
-
-//+ phill-it: 20110908
 static ssize_t store_event(struct kobject *kobj,
                     struct kobj_attribute *attr,
                     const char *buf, size_t size)
@@ -421,51 +319,13 @@ static ssize_t store_event(struct kobject *kobj,
 	const ptrdiff_t off = attr - batt_sysfs_testmode;
 
     sscanf( buf, "%d", &flag );
+
 	if(flag == 1)
 		event_logging |= (0x1 << off);
 	else if(flag == 0)
 		event_logging &= ~(0x1 << off);
-
-#ifdef __BATTERY_COMPENSATION__
-	switch (off) {
-			case DATA_CALL:
-			case TALK_WCDMA:
-			case TALK_GSM:
-			case VT_CALL:
-			case G_MAP:
-			case BT_CALL:
-			case WAP_BROWSING:
-			case GAME:
-    					adcfg_set_compensate(flag, OFFSET_WAP_BROWSING, COMPENSATE_DEFAULT);
-					break;
-			case MP3:
-    					adcfg_set_compensate(flag, OFFSET_MP3_PLAY, COMPENSATE_MP3);
-					break;
-			case CAMERA_PREVIEW:
-    					adcfg_set_compensate(flag, OFFSET_CAMERA_PREVIEW,COMPENSATE_CAMERA_PREVIEW );
-					break;
-			case CAMERA_RECORDING:
-    					adcfg_set_compensate(flag, OFFSET_CAMERA_RECORDING, COMPENSATE_CAMERA_RECORDING);
-					break;
-			case VIDEO:
-    					adcfg_set_compensate(flag, OFFSET_VIDEO_PLAY,COMPENSATE_VIDEO );
-					break;
-			case E_BOOK:
-    					adcfg_set_compensate(flag, OFFSET_EBOOK, COMPENSATE_EBOOK );
-					break;
-			case WIFI_BROWSING:
-    					adcfg_set_compensate(flag, OFFSET_WIFI_BROWSING, COMPENSATE_WIFI_BROWSING );
-					break;
-			case BROWSER:
-    					adcfg_set_compensate(flag, OFFSET_BROWSER, COMPENSATE_BROWSER );
-					break;
-			default:
-					dbgPrintk("not exist offset=%d", off);
-					break;
-	}
-#endif
-	dbgPrintk("[BM] %s, offset=%d, value=%d, evt:%x",__func__, off, flag, event_logging);
-
+	
+    printk("[BM] store_event offset=%d, value=%d\n", off, flag);
     return size;
 }
 
@@ -473,9 +333,7 @@ static ssize_t store_event(struct kobject *kobj,
 
 int _charger_state_change_( int category, int value, bool is_sleep )
 {   
-#ifdef FCHG_DBG
     printk( "[BM] cate: %d, value: %d\n", category, value );
-#endif
 
     if( category == STATUS_CATEGORY_CABLE )
     {
@@ -534,6 +392,13 @@ int _charger_state_change_( int category, int value, bool is_sleep )
                 break;
 
             case POWER_SUPPLY_STATUS_FULL :
+                /*Start monitoring the batt. level for Re-charging*/
+                sec_bci.battery.monitor_field_rechg_vol = true;
+
+                /*Stop monitoring the temperature*/
+                sec_bci.battery.monitor_field_temp = false;
+
+                wake_lock_timeout( &sec_bc_wakelock , HZ );
                 break;
 
             case POWER_SUPPLY_STATUS_CHARGING :
@@ -565,40 +430,31 @@ int _charger_state_change_( int category, int value, bool is_sleep )
 
                 break;
 
-		case POWER_SUPPLY_STATUS_FULL_CUT_OFF:
-                sec_bci.battery.monitor_field_rechg_vol = true;
-
-                /*Stop monitoring the temperature*/
-                sec_bci.battery.monitor_field_temp = false;
-
-                wake_lock_timeout( &sec_bc_wakelock , HZ );
-			break;
-
             default :
                 break;
         }
 
     }
 
-   	 if( !is_sleep )
-   	 {
-   	     struct battery_device_info *di;
-   	     struct platform_device *pdev;
+    if( !is_sleep )
+    {
+        struct battery_device_info *di;
+        struct platform_device *pdev;
 
-   	     pdev = to_platform_device( this_dev );
-   	     di = platform_get_drvdata( pdev );
-   	     cancel_delayed_work( &di->battery_monitor_work );
-   	     queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, 5 * HZ ); 
+        pdev = to_platform_device( this_dev );
+        di = platform_get_drvdata( pdev );
+        cancel_delayed_work( &di->battery_monitor_work );
+        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, 5 * HZ ); 
 
-   	     power_supply_changed( &di->sec_battery );
-   	     power_supply_changed( &di->sec_ac );
-   	     power_supply_changed( &di->sec_usb );
-   	 }
-   	 else
-   	 {
-   	     release_gptimer12( &batt_gptimer_12 );
-   	     request_gptimer12( &batt_gptimer_12 );
-   	 }
+        power_supply_changed( &di->sec_battery );
+        power_supply_changed( &di->sec_ac );
+        power_supply_changed( &di->sec_usb );
+    }
+    else
+    {
+        release_gptimer12( &batt_gptimer_12 );
+        request_gptimer12( &batt_gptimer_12 );
+    }
 
 Out_Charger_State_Change :
     return 0;
@@ -614,9 +470,9 @@ int _low_battery_alarm_()
     di = platform_get_drvdata( pdev );
 
     level = get_battery_level_ptg();
-    //if ( level == 1 )
-    //    sec_bci.battery.battery_level_ptg = 0;
-    //else 
+    if ( level == 1 )
+        sec_bci.battery.battery_level_ptg = 0;
+    else 
         sec_bci.battery.battery_level_ptg = level;
 
     wake_lock_timeout( &sec_bc_wakelock , HZ );
@@ -659,35 +515,6 @@ int _get_average_value_( int *data, int count )
     return average; 
 }
 
-int get_vbat_adc(bool is_sleep)
-{
-
-    struct twl4030_madc_request req;
-	int adc;
-
-	if (is_sleep != true)
-	{
-		req.channels = ( 1 << 12 );
-		req.do_avg = 0;
-		req.method = TWL4030_MADC_SW1;
-		req.active = 0;
-		req.func_cb = NULL;
-
-
-		twl4030_madc_conversion( &req );
-		adc = req.rbuf[12];
-	}
-	else /* while sleeping, normal i2c operation isn't possible which use schedule functions */
-	{
-		adc = t2_adc_data(6);	/* vbat adc channel = 12 */
-		//printk("%s : VBAT ADC in sleep => %d\n", __func__, adc);
-	}
-
-	adc += sec_bci.battery.battery_cal;	/* battery VBAT calibartion */
-
-	return adc;
-}
-
 int _get_t2adc_data_( int ch )
 {
     int ret = 0;
@@ -696,12 +523,7 @@ int _get_t2adc_data_( int ch )
     struct twl4030_madc_request req;
 
     // To control thermal sensor power
- //   gpio_set_value(OMAP_GPIO_EN_TEMP_VDD, 1);
-#if ( CONFIG_SAMSUNG_REL_HW_REV >= 4 )
-/* AALTO(taejin.hyeon) 2011.03.18 Aalto vmmc2 is used by TSP, not usb. */
-//	twl_i2c_write_u8( TWL4030_MODULE_PM_RECEIVER, 0x20, TWL4030_VMMC2_DEV_GRP );
-/* AALTO(taejin.hyeon) 2011.03.18. end */
-#endif
+    gpio_set_value(OMAP_GPIO_EN_TEMP_VDD, 1);
 
 	if ( ch >= 1 && ch <= 7 ){
 	    turn_resources_on_for_adc();
@@ -715,8 +537,6 @@ int _get_t2adc_data_( int ch )
     req.method = TWL4030_MADC_SW1;
     req.active = 0;
     req.func_cb = NULL;
-
-
 
     #if 0
     twl4030_madc_conversion( &req );
@@ -735,12 +555,7 @@ int _get_t2adc_data_( int ch )
 	    turn_resources_off_for_adc();
 	}
     // To control thermal sensor power
-//    gpio_set_value(OMAP_GPIO_EN_TEMP_VDD, 0);
-#if ( CONFIG_SAMSUNG_REL_HW_REV >= 4 )
-/* AALTO(taejin.hyeon) 2011.03.18 Aalto vmmc2 is used by TSP, not usb. */
-//	twl_i2c_write_u8( TWL4030_MODULE_PM_RECEIVER, 0x0, TWL4030_VMMC2_DEV_GRP );
-/* AALTO(taejin.hyeon) 2011.03.18. end */
-#endif
+    gpio_set_value(OMAP_GPIO_EN_TEMP_VDD, 0);
 
     return ret;
 }
@@ -880,7 +695,7 @@ static int t2adc_to_temperature( int value, int channel )
     }
     temp -= 15;
     temp=temp-1;
-
+    
     return temp;
 }
 
@@ -890,69 +705,19 @@ static int do_fuelgauge_reset( void )
     return 1;
 }
 
-//+ phill-it: bhji
-static int average_battery(int type, int value)
+static int get_battery_level_adc( void )
 {
-	int res;
-
-
-#if 0 // for input range
-	if ((type < 0) || (type >= BATT_MEASUREMENT) || (value < 0))
-		return -1;
-#endif
-
-	if (battery_avg[type].msize >= BATT_AVER_PER) {
-		if (++battery_avg[type].mindex >= BATT_AVER_PER)
-			battery_avg[type].mindex = 0;
-		battery_avg[type].sum_data -= battery_avg[type].data_window[battery_avg[type].mindex];
-		battery_avg[type].sum_data += value;
-		battery_avg[type].data_window[battery_avg[type].mindex] = value;
-	} else {
-		battery_avg[type].data_window[battery_avg[type].mindex] = value;
-		battery_avg[type].msize++;
-		battery_avg[type].mindex = battery_avg[type].msize;
-		battery_avg[type].sum_data += value;
-	}
-
-	res = battery_avg[type].sum_data / battery_avg[type].msize;
-
-	return res;
-}
-//- 
-
-static int get_battery_level_adc( bool flag )
-{
-	int value;
-
-	if (!flag) {
-		value = get_fuelgauge_adc_value( 5, CHARGE_DUR_ACTIVE, 0 );
-		if (value < 0) {
-			value = sec_bci.battery.battery_level_vol;
-			//printk("[BM]get_fuelgauge_adc_value return data < 0 %d\n",sec_bci.battery.battery_level_vol);
-		}
-
-		avr_vol = average_battery(BATT_VOL_AVG, value);
-		sec_bci.battery.battery_level_vol = value;
+    int value;
+    value = get_fuelgauge_adc_value( 5, CHARGE_DUR_ACTIVE );
+    if(value < 0)
+        value = sec_bci.battery.battery_level_vol;
 
 #ifdef CONFIG_SAMSUNG_BATTERY_TESTMODE
     return 4100;
 #else
-	//printk("[BM] %s return data %d\n",__func__,value);
     return value;
 #endif
-	} else {
-		value = get_fuelgauge_adc_value( 5, CHARGE_DUR_ACTIVE, 1 );
-		if (value < 0) {
-			value = sec_bci.battery.battery_level_vol_adc;
-			//printk("[BM]flag get_fuelgauge_adc_value return data < 0 %d\n",sec_bci.battery.battery_level_vol_adc);
-		}
 
-		avr_vol_adc = average_battery(BATT_VOL_ADC_AVG, value);
-		sec_bci.battery.battery_level_vol_adc = value;
-		//printk("[BM] %s flag return data %d\n",__func__,value);
-
-		return value;
-	}
 }
 
 static int get_adjusted_battery_ptg(int value)
@@ -976,25 +741,20 @@ static int get_battery_level_ptg( void )
     int value;
 
     value = get_fuelgauge_ptg_value( CHARGE_DUR_ACTIVE );
-	//printk("[BM] %s return data %d\n",__func__,value);
 
 	/* adjust percentage value for Latona */
 	//if(!sec_bci.charger.is_charging)
-//	value = get_adjusted_battery_ptg(value);
-
-	/*
+	value = get_adjusted_battery_ptg(value);
+/*
     if ( sec_bci.charger.is_charging && value >= 100)
         value = 99;
-    */
-	//P110106-0134
-    if (( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL ) || ( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL))
+*/
+    if ( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL )
 		value = 100;
 
     if(!boot_complete && value <= 0)
         value = 1;
 
-	//printk("[BM] %s return data %d\n",__func__,value);
-//    sec_bci.battery.battery_level_ptg = value;
 #ifdef CONFIG_SAMSUNG_BATTERY_TESTMODE
     return 60;
 #else
@@ -1004,39 +764,18 @@ static int get_battery_level_ptg( void )
 
 static int get_system_temperature( bool flag )
 {
-	int adc;
-	int temp;
-
-	u8 regval = 0;
-
-	twl_i2c_read_u8(TWL4030_MODULE_MAIN_CHARGE,
-				  &regval, TWL4030_BCI_BCICTL1);
-	twl_i2c_write_u8(TWL4030_MODULE_MAIN_CHARGE,
-				   0x0, TWL4030_BCI_BCICTL1);
+    int adc;
+    int temp;
     
-
     adc = _get_t2adc_data_( device_config->TEMP_ADC_PORT );
 
+    if( flag )
+        return adc;
 
-	if (adc < 0) {
-		adc = sec_bci.battery.battery_temp_adc;
-	}
+    temp = t2adc_to_temperature( adc, device_config->TEMP_ADC_PORT );
 
-    if (flag) {
-		avr_temp_adc = average_battery(BATT_TEMP_ADC_AVG, adc);
-		sec_bci.battery.battery_temp_adc = adc;
-		return adc;
-	}
-
-	temp = t2adc_to_temperature( adc, device_config->TEMP_ADC_PORT );
-	//if (temp < 0) {
-	//	temp = sec_bci.battery.battery_temp;
-	//}
-
-	avr_temp = average_battery(BATT_TEMP_AVG, temp);
-	sec_bci.battery.battery_temp = temp;
-
-	return temp;
+//	return 70;
+    return temp;
 }
 
 static int get_charging_current_adc_val( void )
@@ -1051,7 +790,7 @@ static int get_charging_current_adc_val( void )
 static int check_full_charge_using_chg_current( int charge_current_adc )
 {
 
-    if ( sec_bci.battery.battery_level_vol < 4130 )
+    if ( sec_bci.battery.battery_level_vol < 4000 )
     {
         sec_bci.battery.confirm_full_by_current = 0;
         return 0;
@@ -1087,126 +826,46 @@ static int check_full_charge_using_chg_current( int charge_current_adc )
     return 0; 
 }
 
-static int check_full_charge_using_chg_current2( int charge_current_flag )
-{
-
-//    if ( sec_bci.battery.battery_level_vol < 4100 )
-    if ( sec_bci.battery.battery_level_vol < BATT_VOL_100 )
-    {
-        sec_bci.battery.confirm_full_by_current = 0;
-        return 0;
-    }
-	if (charge_current_flag==2) {
-		if (avr_vol < CHARGE_RECHG_VOLTAGE) {
-			sec_bci.battery.confirm_full_by_current = 0;
-			return 0;
-		}
-	}
-
-    if (sec_bci.battery.support_monitor_full)
-    {
-//        if ( charge_current_adc <= CHARGE_FULL_CURRENT_ADC )
-        if ( charge_current_flag)
-        {
-
-#ifdef FCHG_DBG
-	printk("[BM] charge_current_flag = %d\n",charge_current_flag);
-#endif
-
-            sec_bci.battery.confirm_full_by_current++;
-
-            // changing freq. of monitoring adc to Burst.
-            batt_gptimer_12.expire_time = 5;
-            sec_bci.battery.monitor_duration = 5;
-        }
-        else
-        {
-            sec_bci.battery.confirm_full_by_current = 0;
-            // changing freq. of monitoring adc to Default.
-            batt_gptimer_12.expire_time = MONITOR_DURATION_DUR_SLEEP;
-            sec_bci.battery.monitor_duration = MONITOR_DEFAULT_DURATION;
-        }
-
-        if ( sec_bci.battery.confirm_full_by_current >= 4 )
-        {
-            batt_gptimer_12.expire_time = MONITOR_DURATION_DUR_SLEEP;
-            sec_bci.battery.monitor_duration = MONITOR_DEFAULT_DURATION;
-            sec_bci.battery.confirm_full_by_current = 0;
-
-            return 1;
-        }   
-    }
-    return 0; 
-}
-
 static void get_system_status_in_sleep( int *battery_level_ptg, 
                     int *battery_level_vol, 
                     int *battery_temp, 
-                    int *charge_current_flag)
+                    int *charge_current_adc )
 {
     int temp_adc;
     int ptg_val;
-    int val;
 
     twl4030_i2c_init();
     normal_i2c_init();
 
     ptg_val = get_fuelgauge_ptg_value( CHARGE_DUR_SLEEP );
-//	ptg_val = get_adjusted_battery_ptg(ptg_val);
+	ptg_val = get_adjusted_battery_ptg(ptg_val);
 
     if ( ptg_val >= 0 )
     {
         *battery_level_ptg = ptg_val;
     }
 
-    *battery_level_vol = get_fuelgauge_adc_value( 5, CHARGE_DUR_SLEEP, 0 );
-	avr_vol = average_battery(BATT_VOL_AVG, *battery_level_vol);
-
-	val = get_fuelgauge_adc_value(5, CHARGE_DUR_SLEEP, 1);
-	avr_vol_adc = average_battery(BATT_VOL_ADC_AVG, val);
+    *battery_level_vol = get_fuelgauge_adc_value( 5, CHARGE_DUR_SLEEP );
 
     temp_adc = t2_adc_data( device_config->TEMP_ADC_PORT );
-	avr_temp_adc = average_battery(BATT_TEMP_ADC_AVG, temp_adc);
-
     //temp_adc = _get_t2adc_data_( device_config->TEMP_ADC_PORT );
 
-#if 0
-/*
     if ( device_config->MONITORING_CHG_CURRENT )
         //*charge_current_adc = _get_t2adc_data_ ( device_config->CHG_CURRENT_ADC_PORT );
         *charge_current_adc = t2_adc_data ( device_config->CHG_CURRENT_ADC_PORT );
-//*/
-#endif
-
-	*charge_current_flag = check_full_charge_current(CHARGE_DUR_SLEEP);
 
     normal_i2c_disinit();
     twl4030_i2c_disinit();
 
     *battery_temp = t2adc_to_temperature( temp_adc, device_config->TEMP_ADC_PORT ); 
-	avr_temp = average_battery(BATT_TEMP_AVG, *battery_temp);
-
-#ifdef FCHG_DBG
-	printk( "[BM-S] (avg_vol:%d, vol:%d) (avg_vol_adc:%d, vol_adc:%d)\n",
-					avr_vol,
-					*battery_level_vol,
-					avr_vol_adc,
-					val);
-	printk( "[BM-S] (avg_temp:%d, temp:%d) (avg_temp_adc:%d, temp_adc:%d)\n",
-					avr_temp,
-					*battery_temp,
-					avr_temp_adc,
-					temp_adc);
-#endif
 }
 
 static int battery_monitor_core( bool is_sleep )
 {
 
     int charging_time;
-	//int rechg_voltage;
+	int rechg_voltage;
 
-#if 0
 	if(event_logging)
 	{
 		stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_EVENT;
@@ -1217,7 +876,6 @@ static int battery_monitor_core( bool is_sleep )
 		stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_MAX;
 		recover_temperature_overheat = CHARGE_RECOVER_TEMPERATURE_MAX;	
 	}
-#endif
 	
     /*Monitoring the system temperature*/
     if ( sec_bci.battery.monitor_field_temp )
@@ -1245,7 +903,7 @@ static int battery_monitor_core( bool is_sleep )
                 || sec_bci.battery.battery_health == POWER_SUPPLY_HEALTH_COLD )
             {
                 if ( sec_bci.battery.battery_temp <= recover_temperature_overheat //CHARGE_RECOVER_TEMPERATURE_MAX 
-                    && sec_bci.battery.battery_temp >= recover_temperature_cold ) //CHARGE_RECOVER_TEMPERATURE_MIN )
+                    && sec_bci.battery.battery_temp >= CHARGE_RECOVER_TEMPERATURE_MIN )
                 {
                     sec_bci.battery.battery_health = POWER_SUPPLY_HEALTH_GOOD;
                     _battery_state_change_( STATUS_CATEGORY_TEMP, 
@@ -1261,9 +919,7 @@ static int battery_monitor_core( bool is_sleep )
 
                 if ( sec_bci.battery.battery_temp >= stop_temperature_overheat) //CHARGE_STOP_TEMPERATURE_MAX )
                 {
-#ifdef FCHG_DBG
                 	printk("[TA] Temperature is high (%d*)\n", sec_bci.battery.battery_temp);
-#endif
                     if ( sec_bci.battery.battery_health != POWER_SUPPLY_HEALTH_OVERHEAT )
                     {
                         sec_bci.battery.battery_health = POWER_SUPPLY_HEALTH_OVERHEAT;
@@ -1273,11 +929,9 @@ static int battery_monitor_core( bool is_sleep )
                                     is_sleep );
                     }
                 }
-                else if ( sec_bci.battery.battery_temp <= stop_temperature_cold ) //CHARGE_STOP_TEMPERATURE_MIN )
+                else if ( sec_bci.battery.battery_temp <= CHARGE_STOP_TEMPERATURE_MIN )
                 {
-#ifdef FCHG_DBG
 					printk("[TA] Temperature is low (%d*)\n", sec_bci.battery.battery_temp);
-#endif
                     if ( sec_bci.battery.battery_health != POWER_SUPPLY_HEALTH_COLD )
                     {
                         sec_bci.battery.battery_health = POWER_SUPPLY_HEALTH_COLD;
@@ -1308,46 +962,21 @@ static int battery_monitor_core( bool is_sleep )
         if ( sec_bci.battery.monitor_duration > MONITOR_RECHG_VOL_DURATION )
             sec_bci.battery.monitor_duration = MONITOR_RECHG_VOL_DURATION;
 
-/*
 		if(sec_bootmode == 5) // offmode charging
 			rechg_voltage = CHARGE_RECHG_VOLTAGE_OFFMODE;
 		else
 			rechg_voltage = CHARGE_RECHG_VOLTAGE;
-//*/
 
-	//rechg_voltage = BATT_VOL_95;	//jineokpark
-	//rechg_voltage = BATT_VOL_100;
-	//rechg_voltage = 4117;
-#ifdef FCHG_DBG
-	printk( "[BM] avg:%d vol:%d\n",
-					avr_vol,
-					sec_bci.battery.battery_level_vol);
-#endif
-//        if (sec_bci.battery.battery_level_vol <= rechg_voltage )
-//	if (avr_vol <= rechg_voltage)
-		if (avr_vol < CHARGE_RECHG_VOLTAGE)
+        if (sec_bci.battery.battery_level_vol <= rechg_voltage )
         {
             sec_bci.battery.confirm_recharge++;
             if ( sec_bci.battery.confirm_recharge >= 2 )
             {
-#ifdef FCHG_DBG
-					printk( "[BM] RE-charging !!!\n");
-			        printk( "[BM] CORE monitor BATT.(%d%%, %dmV, %d, count=%d, charging=%d)\n", 
-				    sec_bci.battery.battery_level_ptg,
-				    sec_bci.battery.battery_level_vol,
-				    sec_bci.battery.battery_temp,
-				    boot_monitor_count,
-				    sec_bci.charger.is_charging);
-#endif
+                printk( "[BM] RE-charging vol rechg_voltage = %d\n", rechg_voltage);
                 sec_bci.battery.confirm_recharge = 0;   
-
-                //if ( is_sleep )
-	            //        sec_bci.charger.full_charge_dur_sleep = 0x4;
-                //else
-	                _battery_state_change_( STATUS_CATEGORY_CHARGING, 
-	                            POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL, 
-	                            is_sleep );
-		return -1;
+                _battery_state_change_( STATUS_CATEGORY_CHARGING, 
+                            POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL, 
+                            is_sleep );
             }
         }
         else
@@ -1359,31 +988,18 @@ static int battery_monitor_core( bool is_sleep )
     return 0;   
 }
 
-extern is_twl4030_madc_ready(void);
-
 static void battery_monitor_work_handler( struct work_struct *work )
 {
     int is_full = 0;
-    int charge_current_flag;
+    int charge_current_adc;
     struct battery_device_info *di = container_of( work,
                             struct battery_device_info,
                             battery_monitor_work.work );
 
-	if (0 == is_twl4030_madc_ready())
-	{
-		printk("%s : TWL4030 MADC is not yet ready! Need to wait..\n", __func__);
-		queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ);
-		return;
-	}
-
-#if 1
-//	MD_AL25_ServiceStateMachine();
-#endif
-
     #if 0
     printk( "[BM] battery monitor [Level:%d, ADC:%d, TEMP.:%d, cable: %d] \n",\
         get_battery_level_ptg(),\
-        get_battery_level_adc(0),\
+        get_battery_level_adc(),\
         get_system_temperature(),\
         sec_bci.charger.cable_status );
     #endif
@@ -1391,99 +1007,28 @@ static void battery_monitor_work_handler( struct work_struct *work )
     boot_monitor_count++;
     if(!boot_complete && boot_monitor_count >= 2)
     {
-#ifdef FCHG_DBG
         printk("[BM] boot complete \n");
-#endif
         boot_complete = true;
-		sec_bci.battery.monitor_duration = MONITOR_DEFAULT_DURATION;
     }
-/*
 	if(sec_bci.charger.rechg_count > 0)
 		sec_bci.charger.rechg_count--;
-//*/
 
-	if(sec_bci.charger.rechg_count < 5 && sec_bci.charger.rechg_count > 0)
-		sec_bci.charger.rechg_count--;
 
 //	printk("[BM] MMC2_DAT0 : %x\n", omap_readw(0x4800215c));
 
-/*
     if ( device_config->MONITORING_SYSTEM_TEMP )
         sec_bci.battery.battery_temp = get_system_temperature( TEMP_DEG );
     else
         sec_bci.battery.battery_temp = 0;
-*/
-
-        sec_bci.battery.battery_temp = get_system_temperature( TEMP_DEG );
-#if 0	//high temperature test, show this process value for spare parts --> battery information --> temperature parts
-	static int a = 0, b = 0;
-	if(!b){
-		if(a < 3){
-			sec_bci.battery.battery_temp = get_system_temperature( TEMP_DEG );
-			a++;
-			}
-		else{
-			sec_bci.battery.battery_temp = 47 + a;
-			a++;
-			if(a >= 23)	b = 1;			
-			}
-		}
-	else{
-		sec_bci.battery.battery_temp = 47 + a;
-		a--;
-		if(a < 3)	b = 0;
-		}
-#endif
-
-#if 0
-//low temperature test, show this process value for spare parts --> battery information --> temperature parts
-	static int a = 0, b = 0;
-	if(!b){
-		if(a < 3){
-			sec_bci.battery.battery_temp = get_system_temperature( TEMP_DEG );
-			a++;
-			}
-		else{
-			sec_bci.battery.battery_temp = 8 - a;
-			a++;
-			if(a >= 13)	b = 1;
-			}
-		}
-	else{
-		sec_bci.battery.battery_temp = 8 - a;
-		a--;
-		if(a < 3)	b = 0;
-		}
-#endif
-	sec_bci.battery.battery_temp_adc = get_system_temperature( TEMP_ADC );
 
     #if 0
 	update_rcomp_by_temperature(sec_bci.battery.battery_temp);
 	#endif
 	
     /* Monitoring the battery info. */
-    sec_bci.battery.battery_level_vol= get_battery_level_adc(0);
-    sec_bci.battery.battery_level_vol_adc = get_battery_level_adc(1);
-	sec_bci.battery.battery_level_ptg = get_battery_level_ptg();
-//    msleep(10);
-
-	dbgPrintk("ptg: %d, adc:%d", 
-		    sec_bci.battery.battery_level_ptg,
-			sec_bci.battery.battery_level_vol_adc);
-
-#ifdef FCHG_DBG
-
-    printk( "[BM] monitor BATT.(%d%%, %dmV, %d*, count=%d, charging=%d)\n", 
-		    sec_bci.battery.battery_level_ptg,
-		    sec_bci.battery.battery_level_vol,
-		    sec_bci.battery.battery_temp,
-		    boot_monitor_count,
-		    sec_bci.charger.is_charging
-	  );
-	printk( "[BM] avg_vol:%d avg_temp:%d\n", avr_vol, avr_temp);
-#endif
-
-	charge_current_flag = check_full_charge_current(CHARGE_DUR_ACTIVE);
+    sec_bci.battery.battery_level_ptg = get_battery_level_ptg();
+    msleep(10);
+    sec_bci.battery.battery_level_vol= get_battery_level_adc();
 
     if( !( sec_bci.battery.monitor_field_temp ) && !( sec_bci.battery.monitor_field_rechg_vol ) )
     {
@@ -1502,36 +1047,19 @@ static void battery_monitor_work_handler( struct work_struct *work )
         if ( sec_bci.charger.is_charging && device_config->MONITORING_CHG_CURRENT )
         {
             // in charging && enable monitor_chg_current
-//            charge_current_adc = get_charging_current_adc_val();
-//            is_full = check_full_charge_using_chg_current( charge_current_adc );
-		is_full = check_full_charge_using_chg_current2( charge_current_flag );
+            charge_current_adc = get_charging_current_adc_val();
+            is_full = check_full_charge_using_chg_current( charge_current_adc );
 
-#ifdef FCHG_DBG
-	printk("[BM] charge_current_flag = %d, is_full = %d\n",charge_current_flag, is_full);
-	printk("[BM] sec_bci.charger.charge_status = %d, POWER_SUPPLY_STATUS_FULL = %d\n", sec_bci.charger.charge_status,POWER_SUPPLY_STATUS_FULL);
-#endif
-
-		if( is_full )
-		{
-			if(charge_current_flag == 1 && ( sec_bci.charger.charge_status != POWER_SUPPLY_STATUS_FULL )){
-			_battery_state_change_( STATUS_CATEGORY_CHARGING, 
-				POWER_SUPPLY_STATUS_FULL, 
-				CHARGE_DUR_ACTIVE );
-			}
-			else if(charge_current_flag == 2){
-//			else if(charge_current_flag == 2 && ( sec_bci.charger.charge_status != POWER_SUPPLY_STATUS_FULL )){
-			_battery_state_change_( STATUS_CATEGORY_CHARGING, 
-				POWER_SUPPLY_STATUS_FULL_CUT_OFF, 
-				CHARGE_DUR_ACTIVE );
-//				change_charge_status( POWER_SUPPLY_STATUS_FULL_CUT_OFF, CHARGE_DUR_ACTIVE );
-			}
-			else{	
-				battery_monitor_core( CHARGE_DUR_ACTIVE );
-				}
-            	}
-		else{
-			battery_monitor_core(CHARGE_DUR_ACTIVE);
-		}
+            if ( is_full )
+            {
+                _battery_state_change_( STATUS_CATEGORY_CHARGING, 
+                            POWER_SUPPLY_STATUS_FULL, 
+                            CHARGE_DUR_ACTIVE );
+            }
+            else
+            {
+                battery_monitor_core( CHARGE_DUR_ACTIVE );
+            }   
         }
         else
         {
@@ -1539,74 +1067,59 @@ static void battery_monitor_work_handler( struct work_struct *work )
         }
     }
 
-#if 0 
-	printk( "[BM] monitor BATT.(%d%%, %dmV, %d*, count=%d, charging=%d)\n", 
-			sec_bci.battery.battery_level_ptg,
-			sec_bci.battery.battery_level_vol,
-			sec_bci.battery.battery_temp,
-			boot_monitor_count,
-			sec_bci.charger.is_charging
-	      );
-#endif
+    #if 1 
+    printk( "[BM] monitor BATT.(%d%%, %dmV, %d*, count=%d, charging=%d)\n", 
+            sec_bci.battery.battery_level_ptg,
+            sec_bci.battery.battery_level_vol,
+            sec_bci.battery.battery_temp,
+            boot_monitor_count,
+            sec_bci.charger.is_charging
+            );
+    #endif
 	//printk("[BM] adc 167 -> %d^, adc 198 -> %d^\n", t2adc_to_temperature(927, 0), t2adc_to_temperature(884, 0));
 
     power_supply_changed( &di->sec_battery );
     power_supply_changed( &di->sec_ac );
     power_supply_changed( &di->sec_usb );
 
-    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, sec_bci.battery.monitor_duration * (HZ/4));
+    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, sec_bci.battery.monitor_duration * HZ);
+
 }
 
-static int battery_monitor_fleeting_wakeup_handler(unsigned long arg) 
+static int battery_monitor_fleeting_wakeup_handler( unsigned long arg ) 
 {
-	int ret = 0;
-	int is_full = 0;
-	int charge_current_flag= 0;
+    int ret = 0;
+    int is_full = 0;
+    int charge_current_adc = 0;
 
+    get_system_status_in_sleep( &sec_bci.battery.battery_level_ptg,
+                &sec_bci.battery.battery_level_vol,
+                &sec_bci.battery.battery_temp, 
+                &charge_current_adc );
 
-	get_system_status_in_sleep(&sec_bci.battery.battery_level_ptg,
-					&sec_bci.battery.battery_level_vol,
-					&sec_bci.battery.battery_temp,
-					&charge_current_flag);
-
-	is_full = check_full_charge_using_chg_current2(charge_current_flag);
-
-#ifdef FCHG_DBG
-	//printk("[BM] battery_monitor_fleeting_wakeup_handler running\n");
-	printk("[BM] S@ charge_current_flag = %d, is_full = %d\n",
-					charge_current_flag, is_full);
-	printk("[BM] S@ status:%d rechg_vol:%d rechg_cnt:%d is_charging:%d\n",
-					sec_bci.charger.charge_status,
-					sec_bci.battery.monitor_field_rechg_vol,
-					sec_bci.charger.rechg_count,
-					sec_bci.charger.is_charging);
-#endif
-
-	if (sec_bci.charger.is_charging && device_config->MONITORING_CHG_CURRENT) {
-		if (is_full) {
-			if (charge_current_flag == 1 &&
-				(sec_bci.charger.charge_status != POWER_SUPPLY_STATUS_FULL)) {
-				//sec_bci.charger.full_charge_dur_sleep = 0x1;
-				_battery_state_change_(STATUS_CATEGORY_CHARGING,
-								POWER_SUPPLY_STATUS_FULL,
-								CHARGE_DUR_SLEEP);
-				return -1;
-			} else if (charge_current_flag == 2) {
-				//sec_bci.charger.full_charge_dur_sleep = 0x3;
-				_battery_state_change_(STATUS_CATEGORY_CHARGING,
-								POWER_SUPPLY_STATUS_FULL_CUT_OFF,
-								CHARGE_DUR_SLEEP);
-				return -1;
-			}
-		}
+	if( sec_bci.charger.is_charging && (sec_bci.battery.battery_level_ptg >= 90 || sec_bci.battery.battery_level_vol >= 4050))
+	{
+	    if ( device_config->MONITORING_CHG_CURRENT )
+	        is_full = check_full_charge_using_chg_current( charge_current_adc );
+	    else
+	        is_full = _check_full_charge_dur_sleep_();
 	}
 
-	sec_bci.charger.full_charge_dur_sleep = 0x0;
-	ret = battery_monitor_core(CHARGE_DUR_SLEEP);
-    if (ret >= 0)
-		request_gptimer12(&batt_gptimer_12);
+    if ( is_full )
+    {
+        sec_bci.charger.full_charge_dur_sleep = 0x1;
+        ret = -1;
+    }
+    else
+    {
+        sec_bci.charger.full_charge_dur_sleep = 0x0;
+        ret = battery_monitor_core( CHARGE_DUR_SLEEP );
+    }
 
-	return ret;
+    if ( ret >= 0 )
+        request_gptimer12( &batt_gptimer_12 );
+
+    return ret;
 }
 
 // ------------------------------------------------------------------------- // 
@@ -1643,27 +1156,11 @@ static int samsung_battery_get_property( struct power_supply *psy,
     switch ( psp ) 
     {
         case POWER_SUPPLY_PROP_STATUS:
-#if 0
             if( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL 
                 || sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_TEMP )
                 val->intval = POWER_SUPPLY_STATUS_CHARGING;
             else
                 val->intval = sec_bci.charger.charge_status;
-#endif
-			switch (sec_bci.charger.charge_status) {
-			case POWER_SUPPLY_STATUS_CHARGING_OVERTIME:
-			case POWER_SUPPLY_STATUS_FULL_DUR_SLEEP:
-			case POWER_SUPPLY_STATUS_FULL_CUT_OFF:
-            	val->intval = POWER_SUPPLY_STATUS_FULL;
-				break;
-			case POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL:
-			case POWER_SUPPLY_STATUS_RECHARGING_FOR_TEMP:
-                val->intval = POWER_SUPPLY_STATUS_CHARGING;
-				break;
-			default:
-                val->intval = sec_bci.charger.charge_status;
-				break;
-			}
 
             break;
 
@@ -1762,6 +1259,7 @@ static void samsung_pwr_external_power_changed( struct power_supply *psy )
     //schedule_delayed_work(&di->twl4030_bci_monitor_work, 0);
 }
 
+
 // ------------------------------------------------------------------------- // 
 //                           Driver interface                                //
 // ------------------------------------------------------------------------- // 
@@ -1772,7 +1270,7 @@ static int __devinit battery_probe( struct platform_device *pdev )
 
     struct battery_device_info *di;
     
-    printk( "[BM] Battery Probe... bootmode \n\n");
+    printk( "[BM] Battery Probe... bootmode = %d\n\n");
 
     this_dev = &pdev->dev; 
 
@@ -1867,7 +1365,7 @@ static int __devinit battery_probe( struct platform_device *pdev )
             printk( "[BM] sysfs create fail - %s\n", batt_sysfs_testmode[i].attr.name );
         }
     }
-/*
+
     // Set GPIO to control thermal sensor power
     if (gpio_is_valid(OMAP_GPIO_EN_TEMP_VDD))
     {
@@ -1879,12 +1377,6 @@ static int __devinit battery_probe( struct platform_device *pdev )
 
         gpio_direction_output(OMAP_GPIO_EN_TEMP_VDD, 0);
    }
-*/
-#if ( CONFIG_SAMSUNG_REL_HW_REV >= 4 )
-/* AALTO(taejin.hyeon) 2011.03.18 Aalto vmmc2 is used by TSP, not usb. */
-//	twl_i2c_write_u8( TWL4030_MODULE_PM_RECEIVER, 0x0B, TWL4030_VMMC2_DEDICATED );
-/* AALTO(taejin.hyeon) 2011.03.18. end */
-#endif
 
     // Init. ADC
     turn_resources_on_for_adc();
@@ -1898,31 +1390,13 @@ static int __devinit battery_probe( struct platform_device *pdev )
     batt_gptimer_12.data = (unsigned long) di;
 
 #ifdef CONFIG_SEC_BATTERY_USE_RECOVERY_MODE
-
-	//printk("[BM] !!!!!!!!!!!!!!!!!!\n");
     if (likely(recovery_mode == 0))
-    	{
-    	printk("[BM] recovery_mode == 0\n");
-        //queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ*2 );
-        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ );
-    	}
+        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
     else
-    	{
-    	printk("[BM] recovery_mode != 0\n");
         queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, 0 );
-    	}
-	//printk("[BM] !!!!!!!!!!!!!!!!!!\n");
 #else
     queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
 #endif
-/*
-	if (sec_bootmode == 5) {// offmode charging
-		stop_temperature_overheat    = CHARGE_OFFMODE_STOP_TEMPERATURE_MAX;
-		recover_temperature_overheat = CHARGE_OFFMODE_RECOVER_TEMPERATURE_MAX;
-		stop_temperature_cold        = CHARGE_OFFMODE_STOP_TEMPERATURE_MIN;
-		recover_temperature_cold     = CHARGE_OFFMODE_RECOVER_TEMPERATURE_MIN;
-	}
-*/
     sec_bci.ready = true;
 
     return 0;
@@ -1980,17 +1454,12 @@ static int battery_suspend( struct platform_device *pdev,
 {
     struct battery_device_info *di = platform_get_drvdata( pdev );
 
-#ifdef FCHG_DBG
-	printk("%s dur_sleep:%d, avr_vol:%d, level_vol:%d\n",
-					__func__,
-					sec_bci.charger.full_charge_dur_sleep,
-					avr_vol,
-					sec_bci.battery.battery_level_vol);
-#endif
-
     cancel_delayed_work( &di->battery_monitor_work );
 
 	sec_bci.charger.rechg_count = 0;
+
+
+
     if( sec_bci.charger.cable_status == POWER_SUPPLY_TYPE_MAINS )
     {
 #if 0
@@ -2010,7 +1479,7 @@ static int battery_suspend( struct platform_device *pdev,
         retval = filp_close(filp, NULL);
         set_fs(fs);
 #endif
-
+		
         request_gptimer12( &batt_gptimer_12 );
     }
 
@@ -2021,17 +1490,9 @@ static int battery_resume( struct platform_device *pdev )
 {
     struct battery_device_info *di = platform_get_drvdata( pdev );
 
-#ifdef FCHG_DBG
-	printk("%s dur_sleep:%d, avr_vol:%d, level_vol:%d\n",
-					__func__,
-					sec_bci.charger.full_charge_dur_sleep,
-					avr_vol,
-					sec_bci.battery.battery_level_vol);
-#endif
-
     if ( batt_gptimer_12.active )
     {
-#if 0
+#if 0 
         struct file *filp;
         char buf;
         int count;
@@ -2065,17 +1526,6 @@ static int battery_resume( struct platform_device *pdev )
                         CHARGE_DUR_ACTIVE );
             break;
 
-        case 0x3 : 
-            _battery_state_change_( STATUS_CATEGORY_CHARGING, 
-                        POWER_SUPPLY_STATUS_FULL_CUT_OFF, 
-                        CHARGE_DUR_ACTIVE );
-            break;
-	case 0x4:
-            _battery_state_change_( STATUS_CATEGORY_CHARGING, 
-                        POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL,
-                        CHARGE_DUR_ACTIVE );
-		break;
-
         default : 
             break;
     }
@@ -2088,7 +1538,7 @@ static int battery_resume( struct platform_device *pdev )
 
     sec_bci.charger.full_charge_dur_sleep = 0x0;
     
-    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ * 2 );
+    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
 
     return 0;
 }
@@ -2116,8 +1566,7 @@ static int __init battery_init( void )
     sec_bci.battery.battery_technology = POWER_SUPPLY_TECHNOLOGY_LION;
     sec_bci.battery.battery_level_ptg = 0;
     sec_bci.battery.battery_level_vol = 0;
-    //sec_bci.battery.monitor_duration = MONITOR_DEFAULT_DURATION;
-    sec_bci.battery.monitor_duration = 4;
+    sec_bci.battery.monitor_duration = MONITOR_DEFAULT_DURATION;
     sec_bci.battery.monitor_field_temp = false;
     sec_bci.battery.monitor_field_rechg_vol = false;
     sec_bci.battery.confirm_full_by_current = 0;
@@ -2125,7 +1574,6 @@ static int __init battery_init( void )
     sec_bci.battery.support_monitor_timeout = 1;
     sec_bci.battery.support_monitor_full = 1;
     sec_bci.battery.confirm_recharge = 0;
-	sec_bci.battery.battery_cal = 0;
 
     sec_bci.charger.prev_cable_status = -1;
     sec_bci.charger.cable_status = -1;
@@ -2140,10 +1588,9 @@ static int __init battery_init( void )
 	sec_bci.charger.rechg_count = 0;
     sec_bci.sec_battery_workq = create_singlethread_workqueue("sec_battery_workq");
 
-
     init_gptimer12();
     printk( "[BM] Init Gptimer called \n" );
-		
+
     /* Get the charger driver */
     if( ( ret = charger_init() < 0 ) )
     {

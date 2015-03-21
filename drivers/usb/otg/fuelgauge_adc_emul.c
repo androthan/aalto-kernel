@@ -1,10 +1,10 @@
 /*
- * fuelgauge_adc_emul.c
+ * module/samsung_battery/fuelgauge_max17040.c
  *
- * SW Fuel Gauge Emulator using VBAT adc
+ * SAMSUNG battery driver for Linux
  *
- * Copyright (C) 2011 SAMSUNG ELECTRONICS.
- * Author: Jaemin Yoo
+ * Copyright (C) 2009 SAMSUNG ELECTRONICS.
+ * Author: EUNGON KIM (egstyle.kim@samsung.com)
  *
  * This package is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -14,546 +14,451 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-
 #include <linux/kernel.h>
-#include <linux/module.h>
+#include <linux/i2c.h>
+#include <linux/irq.h>
+#include <linux/interrupt.h>
 #include <linux/workqueue.h>
-#include <linux/platform_device.h>
-#include <linux/delay.h>
-#include "common.h"
+#include <mach/gpio.h>
 #include <linux/power_supply.h>
+#include "common.h"
 
-/* 
-   NOTE1 : ADC values are based on OMAP3630 in Aalto project 
-   NOTE2 : voltage is no need to be precise. BUT!!!BUT!!!BUT!!!!
-           Recharging, Power Off, Battery level rely on voltage
-		   value. Keep this in mind!  
-   NOTE3 : voltage margin is +-0.04v except recharging voltage for MP3 or MID products
-   NOTE4 : Can't we just use HW fuel gauge? -.-
-*/
+#if defined(CONFIG_USE_GPIO_I2C)
+    #include <plat/i2c-omap-gpio.h>
+#endif    
 
-/* Use this if you don't need high(?) precision battery status bar */
-#define BATT_LVL6		678    ///* 4.13v ~80% 
-#define BATT_LVL5		658    ///* 80% ~ 65% 
-#define BATT_LVL4		640    ///* 65% ~ 50% 
-#define BATT_LVL3		620    ///* 50% ~ 35% 
-#define BATT_LVL2		602    ///* 35% ~ 20% 
-#define BATT_LVL1		583    ///* 3.60v   ~5% 
-#define BATT_LVL_OFF    575    ///* 3.40v (fixed) 
+#define DRIVER_NAME "secFuelgaugeDev"
 
-#define BATT_RECHARGING	700		/* 4.13v (fixed) +-0.02v margin */
+#define I2C_M_WR    0x00
 
-#define BATT_ADC_CHK_INTERVAL	200	/* milli-seconds */
-#define BATT_ADC_AVG_WINDOW		30	/* # of sampling numbers */
-#define BATT_ADC_AVG_WINDOW_MIN		10	/* # of minimum sampling numbers */
-
-#define PMIC_VBAT_ADC	12	/* vbat is ADC12 for TWL */
-
-#define DRIVER_NAME	"secAdcFg"
+#define REG_VCELL   0x02
+#define REG_SOC     0x04
+#define REG_MODE    0x06
+#define REG_VERSION 0x08
+#define REG_RCOMP   0x0C
+#define REG_CONFIG  0x0D
+#define REG_COMMAND 0xFE
 
 
+#if defined(CONFIG_USE_GPIO_I2C)
+    static OMAP_GPIO_I2C_CLIENT * fuelgauge_i2c_client;
+	static struct i2c_client * fuelgauge_i2c_dummy_client;
+#else
+    static struct i2c_client * fuelgauge_i2c_client;
+#endif
 
-///*
-static BATTERY_INFO battery_table[] = 
-{
-    /* %,    V,  adc*/
-{	BATT_PTG_100	,	BATT_VOL_100	,	BATT_ADC_100	},
-{	BATT_PTG_95	,	BATT_VOL_95	,	BATT_ADC_95	},
-{	BATT_PTG_90	,	BATT_VOL_90	,	BATT_ADC_90	},
-{	BATT_PTG_85	,	BATT_VOL_85	,	BATT_ADC_85	},
-{	BATT_PTG_80	,	BATT_VOL_80	,	BATT_ADC_80	},
-{	BATT_PTG_75	,	BATT_VOL_75	,	BATT_ADC_75	},
-{	BATT_PTG_70	,	BATT_VOL_70	,	BATT_ADC_70	},
-{	BATT_PTG_65	,	BATT_VOL_65	,	BATT_ADC_65	},
-{	BATT_PTG_60	,	BATT_VOL_60	,	BATT_ADC_60	},
-{	BATT_PTG_55	,	BATT_VOL_55	,	BATT_ADC_55	},
-{	BATT_PTG_50	,	BATT_VOL_50	,	BATT_ADC_50	},
-{	BATT_PTG_45	,	BATT_VOL_45	,	BATT_ADC_45	},
-{	BATT_PTG_40	,	BATT_VOL_40	,	BATT_ADC_40	},
-{	BATT_PTG_35	,	BATT_VOL_35	,	BATT_ADC_35	},
-{	BATT_PTG_30	,	BATT_VOL_30	,	BATT_ADC_30	},
-{	BATT_PTG_25	,	BATT_VOL_25	,	BATT_ADC_25	},
-{	BATT_PTG_20	,	BATT_VOL_20	,	BATT_ADC_20	},
-{	BATT_PTG_15	,	BATT_VOL_15	,	BATT_ADC_15	},
-{	BATT_PTG_10	,	BATT_VOL_10	,	BATT_ADC_10	},
-{	BATT_PTG_05	,	BATT_VOL_05	,	BATT_ADC_05	},
-{	BATT_PTG_04	,	BATT_VOL_04	,	BATT_ADC_04	},
-{	BATT_PTG_03	,	BATT_VOL_03	,	BATT_ADC_03	},
-{	BATT_PTG_02	,	BATT_VOL_02	,	BATT_ADC_02	},
-{	BATT_PTG_01	,	BATT_VOL_01	,	BATT_ADC_01	},
-{	BATT_PTG_00	,	BATT_VOL_00	,	BATT_ADC_00	},
-};
-//*/
-	
-static BATTERY_INFO batt_avg_info = {0,0,0};
-
-static struct workqueue_struct* adcfg_workq;
-static struct delayed_work adcfg_work;
-
-static int adc_compensate = 0;
+struct delayed_work fuelgauge_work;
 
 static SEC_battery_charger_info *sec_bci;
 
+// Prototype
+       int get_fuelgauge_adc_value( int, bool );
+       int get_fuelgauge_ptg_value( bool );
+       int fuelgauge_quickstart( void );
+static int i2c_read( unsigned char );
+static int i2c_write( unsigned char *, u8 );
+#if !defined(CONFIG_USE_GPIO_I2C)
+static int i2c_read_dur_sleep( unsigned char );
+#endif
+static irqreturn_t low_battery_isr( int, void * );
+static void fuelgauge_work_handler( struct work_struct * );
+static int fuelgauge_probe( struct i2c_client *, const struct i2c_device_id * );
+static int fuelgauge_remove( struct i2c_client * );
+static void fuelgauge_shutdown( struct i2c_client * );
+static int fuelgauge_suspend( struct i2c_client * , pm_message_t );
+static int fuelgauge_resume( struct i2c_client * );
+       int fuelgauge_init( void );
+       void fuelgauge_exit( void );
+
 extern SEC_battery_charger_info *get_sec_bci( void );
-extern int get_vbat_adc(bool is_sleep);		/* pmic vbat adc */
-extern int _low_battery_alarm_();	/* low battery alarm to framework */
+extern int _low_battery_alarm_( void );
+extern s32 normal_i2c_read_word( u8 , u8 , u8 * );
+extern s32 t2_read_word(u8 , u8 , u8 *);
 
+static const struct i2c_device_id fuelgauge_i2c_id[] = {
+    { DRIVER_NAME, 0 },
+    { },
+};
 
-//+ phill-it: 20110908
-#ifdef __BATTERY_COMPENSATION__
-void adcfg_set_compensate(int mode,int offset,int compensate_value)
+static struct i2c_driver fuelgauge_i2c_driver =
 {
-	if (mode) {
-		if (!(sec_bci->battery.device_state & offset)) {
-			sec_bci->battery.device_state |= offset;
-			adc_compensate += compensate_value;
-		}
-	} else {
-		if (sec_bci->battery.device_state & offset) {
-			sec_bci->battery.device_state &= ~offset;
-			adc_compensate -= compensate_value;
-		}
-	}
-	dbgPrintk("[BAT]:%s: mode :%d, device_state=0x%x, compensation=%d", __func__, mode,sec_bci->battery.device_state, adc_compensate);
-}
+    .driver = {
+        .name   = DRIVER_NAME,
+        .owner  = THIS_MODULE,
+    },       
+
+    .probe      = fuelgauge_probe,
+    .remove     = __devexit_p( fuelgauge_remove ),
+    .shutdown   = fuelgauge_shutdown,
+    .suspend    = fuelgauge_suspend,
+    .resume     = fuelgauge_resume,
+    .id_table   = fuelgauge_i2c_id,
+};
+
+int get_fuelgauge_adc_value( int count, bool is_sleep )
+{
+    int result;
+    
+#if !defined(CONFIG_USE_GPIO_I2C)
+    if( is_sleep )
+        result = i2c_read_dur_sleep( REG_VCELL );
+    else
+        result = i2c_read( REG_VCELL );
+#else
+    result = i2c_read( REG_VCELL );
 #endif
 
-int adcfg_get_compensate(void)
-{
-	return adc_compensate;
+    result = ( result >> 4 ) * 125 / 100;
+    //temp - HW request
+    result += 50;
+    return result;
 }
 
-static int calc_avg_adc(int adc, bool is_sleep)
-{
-	static int adc_window[BATT_ADC_AVG_WINDOW] = {0,};
-	static int total_sum_adc = 0;
-	static int size = 0;
-	static int index = 0;
-	static int old_avg = 0;
-	int total_avg = 0;
-	int i;
-#if 1
-	if(total_sum_adc){
-			if(adc > ((total_sum_adc / size) + 10)){
-					//printk("[BM] battery_level_vol :%d\n",sec_bci->battery.battery_level_vol);
-					if (sec_bci->battery.battery_level_vol < BATT_VOL_90) {
-							if (sec_bci->charger.cable_status == POWER_SUPPLY_TYPE_USB) {
-									//printk("[BM] usb charger calibration!!\n");
-									adc-= 13;
-							}
-							else{
-									//printk("[BM] ta charger calibration!!\n");
-									adc-= 15;
-							}
-					}
-			}
-	}
-#endif
-	if (is_sleep == true)
-	{
-		total_sum_adc = adc;
-		size = 1;
-		index = 1;
-		return adc;
-	}
-
-	if (adc <= 0) 
-	{
-		printk("%s : invalid ADC(%d)\n", __func__, adc);
-	}
-	else if (size >= BATT_ADC_AVG_WINDOW)
-	{
-		if (++index >= BATT_ADC_AVG_WINDOW)
-		{
-			index = 0;
-		}
-		total_sum_adc -= adc_window[index];
-		total_sum_adc += adc;
-		adc_window[index] = adc;
-	}
-	else
-	{
-		adc_window[index] = adc;
-		size++;
-		index = size;
-		total_sum_adc += adc;
-	}
-
-	total_avg = total_sum_adc / size;
-
-	if(sec_bci->charger.is_charging){
-			if(total_avg < old_avg)
-					total_avg = old_avg;
-	}
-	old_avg = total_avg;
-//	printk("[fuelgague]  adc value :%d\n",total_avg);
-	return total_avg;
-	//return total_sum_adc / size;
-}
-
-static int get_batt_adc(bool is_sleep)
-{
-	int adc = 0;
-	int min = -1;
-	int max = -1;
-	int sum = 0;
-	int i = 0;
-
-	int sampling_size = 5;
-
-	adc = get_vbat_adc(is_sleep);
-	min = max = adc;
-
-	sum += adc;
-
-	for (i = 1; i < sampling_size; i++)
-	{
-		adc = get_vbat_adc(is_sleep);
-		if (adc <= min)
-		{
-			min = adc;
-		}
-		else if (adc >= max)
-		{
-			max = adc;
-		}
-		sum += adc;
-	}
-
-	sum -= (min+max);
-
-	return sum / (sampling_size-2);
-}
-
-#if 1
-static void get_batt_info(int count, bool is_sleep)
-{
-	int array_size = ARRAY_SIZE(battery_table);
-	int adc;
-	int avg_adc;
-	int i;
-	static int prev_idx = -1;
-	static unsigned char idx_change_cnt = 0;
-	static bool booting = false;
-
-	adc = get_batt_adc(is_sleep);
-//+ phill-it: 20110908
-#ifdef __BATTERY_COMPENSATION__
-	if(!sec_bci->charger.is_charging){
-		//dbgPrintk("[fuelgauge]: avg_adc= %d \n", avg_adc);
-		//dbgPrintk("[fuelgauge]: %s, device_state=0x%x, compensation=%d\n", __func__, sec_bci->battery.device_state, adc_compensate);
-		adc += adc_compensate;
-		//dbgPrintk("[fuelgauge]: avg_adc + adc_compensate= %d \n", avg_adc);
-	}
-#endif
-	avg_adc = calc_avg_adc(adc, is_sleep);
-	dbgPrintk("avg_adc:%d \n", avg_adc);
-
-	for (i = 0; i < array_size; i++)
-	{
-		if (avg_adc >= battery_table[i].adc) 
-		{
-			if (prev_idx < 0)
-				prev_idx = i;
-
-				if(!is_sleep){
-					idx_change_cnt++;
-					if (booting) {
-						if (idx_change_cnt > 25) {
-							idx_change_cnt = 0;
-							//printk("[%s] change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-							if (prev_idx != i) {
-								if (sec_bci->charger.is_charging)
-									prev_idx > i ? prev_idx-- : prev_idx;
-								else
-									prev_idx > i ? prev_idx : prev_idx++;
-							}
-						}
-					} else {
-						if (idx_change_cnt == 0) {
-							booting = true;
-						} else {
-							if (prev_idx != i)
-								prev_idx > i ? prev_idx-- : prev_idx++;
-						}
-					}
-				}
-				else{
-					prev_idx = i;
-					idx_change_cnt = 0;
-					//printk("[%s] sleep change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-				}
-
-//		printk("[%s] idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-		batt_avg_info = battery_table[prev_idx];
-		return;
-		}
-	}
-	prev_idx = -1;
-	batt_avg_info = battery_table[array_size-1];
-}
-#endif
-#if 0
-static void get_batt_info(int count, bool is_sleep)
-{
-	int array_size = ARRAY_SIZE(battery_table);
-	int adc;
-	int avg_adc;
-	int i;
-	static int prev_idx = -1;
-	static unsigned char idx_change_cnt = 0;
-	static bool booting = false
-
-	adc = get_batt_adc(is_sleep);
-//+ phill-it: 20110908
-#ifdef __BATTERY_COMPENSATION__
-	if(!sec_bci->charger.is_charging){
-		//dbgPrintk("[fuelgauge]: avg_adc= %d \n", avg_adc);
-		//dbgPrintk("[fuelgauge]: %s, device_state=0x%x, compensation=%d\n", __func__, sec_bci->battery.device_state, adc_compensate);
-		adc += adc_compensate;
-		//dbgPrintk("[fuelgauge]: avg_adc + adc_compensate= %d \n", avg_adc);
-	}
-#endif
-	avg_adc = calc_avg_adc(adc, is_sleep);
-	dbgPrintk("avg_adc:%d \n", avg_adc);
-
-	for (i = 0; i < array_size; i++)
-	{
-		if (avg_adc >= battery_table[i].adc) 
-		{
-			if (prev_idx < 0)
-				prev_idx = i;
-
-				if(!is_sleep){
-					if (++idx_change_cnt > 25) {
-						idx_change_cnt = 0;
-						//printk("[%s] change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-						if (prev_idx != i) {
-							if (sec_bci->charger.is_charging)
-								prev_idx > i ? prev_idx-- : prev_idx;
-							else
-								prev_idx > i ? prev_idx : prev_idx++;
-						}
-					}
-				}
-				else{
-					prev_idx = i;
-					idx_change_cnt = 0;
-					//printk("[%s] sleep change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-				}
-
-//		printk("[%s] idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-		batt_avg_info = battery_table[prev_idx];
-		return;
-		}
-	}
-	prev_idx = -1;
-	batt_avg_info = battery_table[array_size-1];
-}
-#endif
-
-/* 
-   Get battery voltage in mV (0~4200mv) 
-   count (sampling number), is_sleep=1 (charging during sleep) 
-*/
-int get_fuelgauge_adc_value( int count, bool is_sleep, bool flag )
-{
-	if (is_sleep == true) 
-	{
-		get_batt_info(5, true);
-	}
-
-	if(flag)	return batt_avg_info.adc;
-	else		return batt_avg_info.voltage;
-}
-
-/* Get battery capacity (0~100%) */
 int get_fuelgauge_ptg_value( bool is_sleep )
 {
-	if (is_sleep == true) 
-	{
-		get_batt_info(5, true);
-	}
+    int val;
 
-	return batt_avg_info.capacity;
-}
+#if !defined(CONFIG_USE_GPIO_I2C)
+    if( is_sleep )
+        val = i2c_read_dur_sleep( REG_SOC ); 
+    else
+        val = i2c_read( REG_SOC );
+#else
+    val = i2c_read( REG_SOC );
+#endif
 
-static int adcfg_lowbat_detect(void)
-{
-	static int first_warn_sent = false;
-	static int second_warn_sent = false;
-	static int poweroff_sent = false;
+    if ((val & 0x0F) >= 32)
+        val = (val >> 8) + 1;
+    else
+        val = (val >> 8);
 
-	if (sec_bci->charger.is_charging || !sec_bci->ready
-					|| batt_avg_info.capacity > BATT_PTG_WARN_1ST)
-	{
-		first_warn_sent = false;
-		second_warn_sent = false;
-		poweroff_sent = false;
+    //if val is lower than -1%, then soc is 0%
+    if (val <= -1)
+        val = 0;
 
-		return false;
-	}
-
-	if (batt_avg_info.capacity <= BATT_PTG_WARN_1ST
-					&& batt_avg_info.capacity > BATT_PTG_WARN_2ND)
-	{
-		if (first_warn_sent == false) 
-		{
-			dbgPrintk("1st: ptg:%d, adc", batt_avg_info.capacity, batt_avg_info.adc);
-			_low_battery_alarm_();
-		}
-		first_warn_sent = true;
-		second_warn_sent = false;
-		poweroff_sent = false;
-	}
-	else if (batt_avg_info.capacity <= BATT_PTG_WARN_2ND
-					&& batt_avg_info.capacity > BATT_PTG_WARN_OFF)
-	{
-		if (second_warn_sent == false) 
-		{
-			dbgPrintk("2nd: ptg:%d, adc", batt_avg_info.capacity, batt_avg_info.adc);
-			_low_battery_alarm_();
-		}
-		first_warn_sent = false;
-		second_warn_sent = true;
-		poweroff_sent = false;
-	}
-	else if (batt_avg_info.capacity <= BATT_PTG_WARN_OFF)
-	{
-		if (poweroff_sent == false) 
-		{
-			dbgPrintk("off: ptg:%d, adc", batt_avg_info.capacity, batt_avg_info.adc);
-			_low_battery_alarm_();
-		}
-		first_warn_sent = false;
-		second_warn_sent = false;
-		poweroff_sent = true;
-	}
-	else
-	{
-		printk("%s : can't reach here!\n", __func__);
-	}
-
-	return true;
-}
-
-extern is_twl4030_madc_ready(void);
-
-static void adcfg_work_handler(struct work_struct *work)
-{
-	static int twl4030_adc_found = false;
-
-	/* twl4030_madc is a drvier for ADC in TWL4030 PMIC */
-	/* It is loaded after adc fuelgauge driver. So we have to wait */
-	if (true == twl4030_adc_found || 1 == is_twl4030_madc_ready())
-	{
-		/* wait for 20ms after twl4030 madc becomes ready. */
-		if (twl4030_adc_found == false)
-		{
-			mdelay(20);
-		}
-		twl4030_adc_found = true;
-
-		get_batt_info(5, false);
-		adcfg_lowbat_detect();
-
-		//printk("[ADCFG] %s : VOL(%d), CAPA(%d), ADC(%d)\n", __func__, batt_avg_info.voltage, batt_avg_info.capacity, batt_avg_info.adc);
-	}
-
-	queue_delayed_work(adcfg_workq, &adcfg_work, msecs_to_jiffies(BATT_ADC_CHK_INTERVAL));
-}
-
-
-/* Below are null functions. just for interfacing */
-
-int fuelgauge_init( void )
-{
-	return 0;	
-}
-
-void fuelgauge_exit( void )
-{
+    //printk("[FG] get_fuelgauge_ptg_value %d\n", val);
+    return ( val > 100 ) ? 100 : val;
 }
 
 int fuelgauge_quickstart( void )
 {
-	return 0;
+    unsigned char buf[3];
+
+    buf[0] = REG_MODE;
+    buf[1] = 0x40;
+    buf[2] = 0x00;
+    i2c_write( buf, 3 );
+
+    return 0;
 }
 
-static int __devinit adcfg_probe(struct platform_device* pdev)
+#if 0
+int update_rcomp_by_temperature(int temp)
 {
-	printk("[ADCFG] %s\n", __func__);
+    static unsigned int appliedRcomp = 0;
 
-	sec_bci = get_sec_bci();
+    int tempCoHot = -75;
+    int tempCoCold = -75;
+    unsigned int newRcomp = 0;
 
-	adcfg_workq = create_workqueue("ADCFGWORKQ");
+    int ret = 0;
+    unsigned char buf[3];
 
-	INIT_DELAYED_WORK(&adcfg_work, adcfg_work_handler);
+    if(temp > 20)
+        newRcomp = startingRcomp + (((temp - 20) * tempCoHot)/100);
+    else if(temp < 20)
+        newRcomp = startingRcomp + (((temp - 20) * tempCoCold)/100);
+    else
+        newRcomp = startingRcomp;
 
-	queue_delayed_work(adcfg_workq, &adcfg_work, 0);
+    if(newRcomp != appliedRcomp)
+    {
+        ret = i2c_read( REG_RCOMP );
+        buf[0] = REG_RCOMP;
+        buf[1] = newRcomp;
+        buf[2] = ret & 0xFF;
+        i2c_write( buf, 3 );
 
-	return 0;
+        appliedRcomp = newRcomp;
+        printk("%s, buf[0]=0x%x, buf[1]=0x%x, buf[2]=0x%x\n", buf[0], buf[1], buf[2]);
+        return 1;
+    }
+
+    return 0;
 }
-
-static int __devexit adcfg_remove(struct platform_device* pdev)
-{
-#ifdef FCHG_DBG
-	printk("[ADCFG] %s\n", __func__);
 #endif
 
-	return 0;
-}
-
-static int adcfg_suspend(struct platform_device* pdev, pm_message_t state)
+static int i2c_read( unsigned char reg_addr )
 {
-#ifdef FCHG_DBG
-	printk("[ADCFG] %s\n", __func__);
+    int ret = 0;
+    unsigned char buf[2];
+
+#if defined(CONFIG_USE_GPIO_I2C)
+    OMAP_GPIO_I2C_RD_DATA i2c_rd_param;
+#else
+    struct i2c_msg msg1[1],msg2[1];
 #endif
 
-	cancel_delayed_work_sync(&adcfg_work);
+#if defined(CONFIG_USE_GPIO_I2C)
+    i2c_rd_param.reg_len = 1;
+    i2c_rd_param.reg_addr = &reg_addr;
+    i2c_rd_param.rdata_len = 2;
+    i2c_rd_param.rdata = buf;
+    omap_gpio_i2c_read(fuelgauge_i2c_client, &i2c_rd_param);
+#else
+    msg1->addr = fuelgauge_i2c_client->addr;
+    msg1->flags = I2C_M_WR;
+    msg1->len = 1;
+    msg1->buf = &reg_addr;
 
-	return 0;
-}
+    ret = i2c_transfer(fuelgauge_i2c_client->adapter, msg1, 1);
+    if( ret < 0 )
+    {
+        printk( KERN_ERR "[FG] fail to read max17040." );
+        return -1;
+    }
+    else
+    {
+        msg2->addr = fuelgauge_i2c_client->addr;
+        msg2->flags = I2C_M_RD;
+        msg2->len = 2;
+        msg2->buf = buf;
 
-static int adcfg_resume(struct platform_device* pdev)
-{
-#ifdef FCHG_DBG
-	printk("[ADCFG] %s\n", __func__);
+        ret = i2c_transfer( fuelgauge_i2c_client->adapter, msg2, 1 );
+
+        if( ret < 0 )
+        {
+            printk( KERN_ERR "[FG] fail to read max17040." );
+            return -1;
+        }
+    }
 #endif
 
-	get_batt_info(5, false);	/* no time to get avg. adc value */
-	adcfg_lowbat_detect();
-	queue_delayed_work(adcfg_workq, &adcfg_work, msecs_to_jiffies(BATT_ADC_CHK_INTERVAL));
+    ret = buf[0] << 8 | buf[1];
 
-	return 0;
+    return ret;
 }
 
-struct platform_driver adcfg_platform_driver = {
-    .probe      = &adcfg_probe,
-    .remove     = __devexit_p(adcfg_remove),
-    .suspend    = &adcfg_suspend,
-    .resume     = &adcfg_resume,
-    .driver     = {
-        .name = DRIVER_NAME,
-    },
-};
-
-static int __init adcfg_init(void)
+static int i2c_write( unsigned char *buf, u8 len )
 {
-	int ret = 0;
+    int ret = 0;
 
-	printk("[ADCFG] %s\n", __func__);
+#if defined(CONFIG_USE_GPIO_I2C)
+    OMAP_GPIO_I2C_WR_DATA i2c_wr_param;
+#else
+    struct i2c_msg msg;
+#endif
 
-	ret = platform_driver_register(&adcfg_platform_driver);
+#if !defined(CONFIG_USE_GPIO_I2C)
+    msg.addr    = fuelgauge_i2c_client->addr;
+    msg.flags = I2C_M_WR;
+    msg.len = len;
+    msg.buf = buf;
 
-	return ret;
+    ret = i2c_transfer( fuelgauge_i2c_client->adapter, &msg, 1 );
+
+    if( ret < 0 )
+    {
+        printk( KERN_ERR "[FG] fail to write max17040." );
+        return -1;
+    }
+#else
+#if 0
+    i2c_wr_param.reg_len = 0;
+    i2c_wr_param.reg_addr = NULL;
+    i2c_wr_param.wdata_len = len;
+    i2c_wr_param.wdata = buf;
+#else
+    i2c_wr_param.reg_len = 1;
+    i2c_wr_param.reg_addr = &(buf[0]);
+    i2c_wr_param.wdata_len = len;
+    i2c_wr_param.wdata = &(buf[1]);	
+    omap_gpio_i2c_write(fuelgauge_i2c_client, &i2c_wr_param);
+#endif
+#endif
+
+    return ret;
 }
 
-static void __exit adcfg_exit(void)
+#if !defined(CONFIG_USE_GPIO_I2C)
+static int i2c_read_dur_sleep( unsigned char reg_addr )
 {
-	platform_driver_unregister(&adcfg_platform_driver);
-	printk("[ADCFG] %s\n", __func__);
+    unsigned char buf[2];
+    unsigned int ret;
+
+    ret = t2_read_word(0x36, reg_addr, buf);
+    if(ret < 0)
+    {
+        printk(KERN_ERR"[%s] Fail to Read max17040\n", __FUNCTION__);
+        return -1;
+    } 
+
+    ret = buf[0] << 8 | buf[1];
+
+    return ret;
+}
+#endif
+
+static irqreturn_t low_battery_isr( int irq, void *_di )
+{
+    if ( sec_bci->ready )
+    {
+        cancel_delayed_work( &fuelgauge_work );
+        schedule_delayed_work( &fuelgauge_work, 0 );
+    }
+    
+    return IRQ_HANDLED; 
 }
 
-module_init(adcfg_init)
-module_exit(adcfg_exit)
+static void fuelgauge_work_handler( struct work_struct *work )
+{
+    printk( "[FG] ext.low_battery!\n" );
+    _low_battery_alarm_();
+}
+
+static int fuelgauge_probe( struct i2c_client *client, 
+                            const struct i2c_device_id *id )
+{
+    int ret = 0;
+    unsigned char buf[3];
+
+    printk( "[FG] Fuelgauge Probe.\n" );
+
+    sec_bci = get_sec_bci();
+
+    if( strcmp( client->name, DRIVER_NAME) != 0 )
+    {
+        ret = -1;
+        printk( "[FG] device not supported.\n" );
+    }
+
+    #if defined(CONFIG_USE_GPIO_I2C)
+	fuelgauge_i2c_dummy_client = client;
+    #else
+    fuelgauge_i2c_client = client;
+    #endif
+
+    if ( client->irq )
+    {
+        INIT_DELAYED_WORK( &fuelgauge_work, fuelgauge_work_handler );
+
+        // set alert threshold to 1%
+        ret = i2c_read( REG_RCOMP );
+        buf[0] = REG_RCOMP;
+        buf[1] = ret >> 8;
+        buf[2] = 0x1F; // 1% -> Refer Fuel guage datasheet.
+        i2c_write( buf, 3 );
+
+        ret = i2c_read( REG_RCOMP );
+        printk( "[FG] val : %x \n", ret );
+
+        ret = irq_to_gpio( client->irq );
+        printk( "[FG] FUEL_INT_GPIO : %d \n", ret );
+
+        set_irq_type( client->irq, IRQ_TYPE_EDGE_FALLING );
+        ret = request_irq( client->irq, low_battery_isr, IRQF_DISABLED, client->name, NULL );
+        if ( ret )
+        {
+            printk( "[FG] could not request irq %d, status %d\n", client->irq, ret );
+        }
+    }
+
+    sec_bci->charger.fuelgauge_full_soc = 95;  // for adjust fuelgauge
+
+    return ret;
+}
+
+static int fuelgauge_remove( struct i2c_client * client )
+{
+    return 0;
+}
+
+static void fuelgauge_shutdown( struct i2c_client * client )
+{
+    return;
+}
+
+static int fuelgauge_suspend( struct i2c_client * client , pm_message_t mesg )
+{
+    int batt_ptg = 0;
+    int ret = 0;
+
+    unsigned char alert_th;
+    unsigned char buf[3];
+
+    if(!sec_bci->charger.is_charging)
+    {
+        // When chargine battery, set alert threshold by using remained battery percentage.
+        batt_ptg = get_fuelgauge_ptg_value(false);
+
+        if(batt_ptg >= 15)
+            alert_th = 0x11; // 15%
+        else if(batt_ptg >= 4)
+            alert_th = 0x1C; // 4%
+        else
+            alert_th = 0x1F; // 1%
+
+	    ret = i2c_read( REG_RCOMP );
+	    buf[0] = REG_RCOMP;
+	    buf[1] = ret >> 8;
+	    buf[2] = alert_th;
+	    i2c_write( buf, 3 );
+	    printk("%s, set alert threshold 0x%2x\n", __func__, alert_th);
+    }
+
+    return 0;
+}
+
+static int fuelgauge_resume( struct i2c_client * client )
+{
+    int ret = 0;
+    unsigned char buf[3];
+
+    ret = i2c_read( REG_RCOMP );
+    buf[0] = REG_RCOMP;
+    buf[1] = ret >> 8;
+    buf[2] = 0x1F;
+    i2c_write( buf, 3 );
+    printk("%s, set alert threshold 1%\n", __func__);
+
+    return 0;
+}
+
+int fuelgauge_init( void )
+{
+    int ret;
+
+#if defined(CONFIG_USE_GPIO_I2C)
+    fuelgauge_i2c_client = omap_gpio_i2c_init(OMAP_GPIO_FUEL_SDA,OMAP_GPIO_FUEL_SCL, 0x36, 100);
+
+    if(fuelgauge_i2c_client == NULL)
+    {
+        printk(KERN_ERR "[FG] omap_gpio_i2c_init failed!\n");
+    }
+
+	printk("[FG] Fuelgauge Init. add dummy i2c driver!\n");
+	if( ( ret = i2c_add_driver( &fuelgauge_i2c_driver ) < 0 ) )
+	{
+		printk( KERN_ERR "[FG] i2c_add_driver failed.\n" );    
+	}
+#else
+    printk("[FG] Fuelgauge Init. add i2c driver!\n");
+    if( ( ret = i2c_add_driver( &fuelgauge_i2c_driver ) < 0 ) )
+    {
+        printk( KERN_ERR "[FG] i2c_add_driver failed.\n" );
+    }
+#endif
+
+    return ret;    
+}
+
+void fuelgauge_exit( void )
+{
+    printk("[FG] Fuelgauge Exit.\n");
+
+#if defined(CONFIG_USE_GPIO_I2C)
+    omap_gpio_i2c_deinit(fuelgauge_i2c_client);
+#endif
+    i2c_del_driver( &fuelgauge_i2c_driver );
+
+}
