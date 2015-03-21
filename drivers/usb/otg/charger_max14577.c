@@ -35,7 +35,7 @@
 #include <plat/mux.h>
 #include <plat/microusbic.h>
 #include <plat/omap3-gptimer12.h>
-#include "aalto_charger.h"
+#include "common.h"
 #include "MD_AL25.h"
 
 #if defined ( CONFIG_MAX14577_MICROUSB )
