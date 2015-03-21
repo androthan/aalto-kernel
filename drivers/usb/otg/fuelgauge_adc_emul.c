@@ -30,7 +30,6 @@
 		   value. Keep this in mind!  
    NOTE3 : voltage margin is +-0.04v except recharging voltage for MP3 or MID products
    NOTE4 : Can't we just use HW fuel gauge? -.-
-   NOTE5: this fuel gauge is not hw accelerated :/
 */
 
 /* Use this if you don't need high(?) precision battery status bar */

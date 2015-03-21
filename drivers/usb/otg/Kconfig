@@ -4,7 +4,7 @@
 # are used.
 #
 
-comment "OTG and related infrastructure (+ aalto battery)"
+comment "OTG and related infrastructure"
 
 config USB_OTG_UTILS
 	bool
@@ -98,10 +98,6 @@ config FSA9480_MICROUSB
 
 config MAX14577_MICROUSB
 	bool "MAX14577 MicroUSB Driver"
-	depends on I2C && USB_GADGET
-
-config BATTERY_AALTO
-	bool "Battery driver (monitor & fuel gauge) for Samsung YP-GS1"
 	depends on I2C && USB_GADGET
 
 config FSA9480_NOTIFY_USB_CONNECTION_STATE
