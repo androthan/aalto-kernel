@@ -878,20 +878,6 @@ static struct platform_device samsung_charger_device = {
 		}
 };
 
-static struct platform_device samsung_adcfg_device = {
-	.name = "secAdcFg",
-	.id = -1,
-};
-
-static struct platform_device samsung_battery_device = {
-	.name = "secBattMonitor",
-	.id = -1,
-	.num_resources = 0,
-	.dev = {
-		.platform_data = &samsung_battery_config_data,
-		}
-};
-
 static struct led_info sec_keyled_list[] = {
 	{
 	 .name = "button-backlight",
@@ -952,8 +938,6 @@ static struct platform_device *board_devices[] __initdata = {
 	&board_ear_key_device,
 #endif
 	&board_power_key_device,
-	&samsung_battery_device,
-	&samsung_adcfg_device,
 	&samsung_charger_device,
 	&samsung_vibrator_device,
 	&samsung_pl_sensor_power_device,
