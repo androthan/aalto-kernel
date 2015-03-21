@@ -428,6 +428,7 @@ static ssize_t store_event(struct kobject *kobj,
 
 #ifdef __BATTERY_COMPENSATION__
 	switch (off) {
+// Not used in aalto
 			case DATA_CALL:
 			case TALK_WCDMA:
 			case TALK_GSM:
