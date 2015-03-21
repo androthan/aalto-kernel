@@ -98,8 +98,7 @@ struct battery_device_config
 struct battery_device_info 
 {
     struct device *dev;
-    struct work_struct battery_monitor_work;
-    struct delayed_work battery_polling_work;
+    struct delayed_work battery_monitor_work;
 
     // LDO USB1V5, USB1V9 have a same unique operating mode.
     struct regulator *usb1v5;
@@ -110,8 +109,6 @@ struct battery_device_info
     struct power_supply sec_battery;
     struct power_supply sec_ac;
     struct power_supply sec_usb;    
-
-    int initial_check_count; 
 };
 
 static struct device *this_dev;
@@ -193,6 +190,9 @@ extern unsigned long long sched_clock( void );
 
 extern u32 sec_bootmode;
 
+static bool boot_complete = false;
+static int boot_monitor_count = 0;
+
 int stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_MAX;
 int recover_temperature_overheat = CHARGE_RECOVER_TEMPERATURE_MAX;
 
@@ -234,7 +234,6 @@ static ssize_t store_batt_monitor_temp(struct kobject *kobj,
     return size;
 }
 
-<<<<<<< HEAD
 static ssize_t store_batt_boot_complete(struct kobject *kobj,
                     struct kobj_attribute *attr,
                     const char *buf, size_t size)
@@ -249,17 +248,6 @@ static ssize_t store_batt_boot_complete(struct kobject *kobj,
     return size;
 }
 
-=======
-static ssize_t store_batt_fuelgauge_reset(struct kobject *kobj,
-                    struct kobj_attribute *attr,
-                    const char *buf, size_t size)
-{
-	do_fuelgauge_reset();
-    return size;
-}
-
-
->>>>>>> 38cae44... battery-monitor: don't use boot_complete flag
 __ATTR_SHOW_CALLBACK( show_batt_vol, get_battery_level_adc() )
 __ATTR_SHOW_CALLBACK( show_batt_vol_adc, 0 )
 __ATTR_SHOW_CALLBACK( show_batt_temp, get_system_temperature( TEMP_DEG ) * 10 )
@@ -308,6 +296,7 @@ static struct kobj_attribute batt_sysfs_testmode[] = {
     __ATTR( batt_capacity, 0644, show_batt_capacity, NULL ),
     __ATTR( batt_fuelgauge_reset, 0644, do_batt_fuelgauge_reset, NULL ),
     __ATTR( batt_monitor_temp, 0664, show_batt_monitor_temp, store_batt_monitor_temp ),
+    __ATTR( batt_boot_complete, 0664, NULL, store_batt_boot_complete ),
     __ATTR( fg_soc, 0644, show_batt_capacity, NULL ),
     __ATTR( batt_temp_check, 0644, show_batt_temp_check, NULL ),
     __ATTR( batt_full_check, 0644, show_batt_full_check, NULL ),    
@@ -454,8 +443,8 @@ int _charger_state_change_( int category, int value, bool is_sleep )
 
         pdev = to_platform_device( this_dev );
         di = platform_get_drvdata( pdev );
-        cancel_delayed_work( &di->battery_polling_work );
-        queue_delayed_work(sec_bci.sec_battery_workq, &di->battery_polling_work, 5 * HZ);
+        cancel_delayed_work( &di->battery_monitor_work );
+        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, 5 * HZ ); 
 
         power_supply_changed( &di->sec_battery );
         power_supply_changed( &di->sec_ac );
@@ -763,6 +752,9 @@ static int get_battery_level_ptg( void )
     if ( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL )
 		value = 100;
 
+    if(!boot_complete && value <= 0)
+        value = 1;
+
 #ifdef CONFIG_SAMSUNG_BATTERY_TESTMODE
     return 60;
 #else
@@ -1002,7 +994,7 @@ static void battery_monitor_work_handler( struct work_struct *work )
     int charge_current_adc;
     struct battery_device_info *di = container_of( work,
                             struct battery_device_info,
-                            battery_monitor_work );
+                            battery_monitor_work.work );
 
     #if 0
     printk( "[BM] battery monitor [Level:%d, ADC:%d, TEMP.:%d, cable: %d] \n",\
@@ -1012,15 +1004,12 @@ static void battery_monitor_work_handler( struct work_struct *work )
         sec_bci.charger.cable_status );
     #endif
 
-<<<<<<< HEAD
     boot_monitor_count++;
     if(!boot_complete && boot_monitor_count >= 2)
     {
         printk("[BM] boot complete \n");
         boot_complete = true;
     }
-=======
->>>>>>> 38cae44... battery-monitor: don't use boot_complete flag
 	if(sec_bci.charger.rechg_count > 0)
 		sec_bci.charger.rechg_count--;
 
@@ -1078,16 +1067,12 @@ static void battery_monitor_work_handler( struct work_struct *work )
         }
     }
 
-<<<<<<< HEAD
     #if 1 
     printk( "[BM] monitor BATT.(%d%%, %dmV, %d*, count=%d, charging=%d)\n", 
-=======
-    #if 1
-    pr_info( "[BM] monitor BATT.(%d%%, %dmV, %d*, charging=%d)\n",
->>>>>>> 38cae44... battery-monitor: don't use boot_complete flag
             sec_bci.battery.battery_level_ptg,
             sec_bci.battery.battery_level_vol,
             sec_bci.battery.battery_temp,
+            boot_monitor_count,
             sec_bci.charger.is_charging
             );
     #endif
@@ -1097,7 +1082,7 @@ static void battery_monitor_work_handler( struct work_struct *work )
     power_supply_changed( &di->sec_ac );
     power_supply_changed( &di->sec_usb );
 
-    wake_unlock(&sec_bc_wakelock);
+    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, sec_bci.battery.monitor_duration * HZ);
 
 }
 
@@ -1135,22 +1120,6 @@ static int battery_monitor_fleeting_wakeup_handler( unsigned long arg )
         request_gptimer12( &batt_gptimer_12 );
 
     return ret;
-}
-
-static void battery_polling_work(struct work_struct *work)
-{
-    struct battery_device_info *di = container_of( work,
-                                                   struct battery_device_info,
-                                                   battery_polling_work.work );
-
-    wake_lock(&sec_bc_wakelock);
-    queue_work(sec_bci.sec_battery_workq, &di->battery_monitor_work);
-
-    if (di->initial_check_count) {
-        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_polling_work, HZ );
-        di->initial_check_count--;
-    } else
-        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_polling_work, sec_bci.battery.monitor_duration * HZ );
 }
 
 // ------------------------------------------------------------------------- // 
@@ -1314,10 +1283,7 @@ static int __devinit battery_probe( struct platform_device *pdev )
     di->dev = &pdev->dev;
     device_config = pdev->dev.platform_data;
 
-    INIT_WORK(&di->battery_monitor_work, battery_monitor_work_handler);
-    INIT_DELAYED_WORK(&di->battery_polling_work, battery_polling_work);
-
-    di->initial_check_count = INIT_CHECK_COUNT;
+    INIT_DELAYED_WORK( &di->battery_monitor_work, battery_monitor_work_handler );
 
     /*Create power supplies*/
     di->sec_battery.name = "battery";
@@ -1381,7 +1347,6 @@ static int __devinit battery_probe( struct platform_device *pdev )
     }
 
 
-
 #ifdef _OMS_FEATURES_
     // Create battery sysfs files for sharing battery information with platform.
     ret = sysfs_create_file( &di->sec_battery.dev->kobj, &batt_vol_toolow.attr );
@@ -1426,11 +1391,11 @@ static int __devinit battery_probe( struct platform_device *pdev )
 
 #ifdef CONFIG_SEC_BATTERY_USE_RECOVERY_MODE
     if (likely(recovery_mode == 0))
-        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_polling_work, HZ/2 );
+        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
     else
-        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_polling_work, 0 );
+        queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, 0 );
 #else
-    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_polling_work, HZ/2 );
+    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
 #endif
     sec_bci.ready = true;
 
@@ -1467,7 +1432,7 @@ static int __devexit battery_remove( struct platform_device *pdev )
     struct battery_device_info *di = platform_get_drvdata( pdev );
 
     flush_scheduled_work();
-    cancel_delayed_work( &di->battery_polling_work );
+    cancel_delayed_work( &di->battery_monitor_work );
 
     power_supply_unregister( &di->sec_ac );
     power_supply_unregister( &di->sec_battery );
@@ -1489,8 +1454,7 @@ static int battery_suspend( struct platform_device *pdev,
 {
     struct battery_device_info *di = platform_get_drvdata( pdev );
 
-    cancel_work_sync(&di->battery_monitor_work);
-    cancel_delayed_work(&di->battery_polling_work);
+    cancel_delayed_work( &di->battery_monitor_work );
 
 	sec_bci.charger.rechg_count = 0;
 
@@ -1525,8 +1489,6 @@ static int battery_suspend( struct platform_device *pdev,
 static int battery_resume( struct platform_device *pdev )
 {
     struct battery_device_info *di = platform_get_drvdata( pdev );
-
-    wake_lock(&sec_bc_wakelock);
 
     if ( batt_gptimer_12.active )
     {
@@ -1568,14 +1530,15 @@ static int battery_resume( struct platform_device *pdev )
             break;
     }
 
+	wake_lock_timeout( &sec_bc_wakelock , HZ * 3 );
+
     power_supply_changed( &di->sec_battery );
     power_supply_changed( &di->sec_ac );
     power_supply_changed( &di->sec_usb );
 
     sec_bci.charger.full_charge_dur_sleep = 0x0;
-
-    queue_work(sec_bci.sec_battery_workq, &di->battery_monitor_work);
-    queue_delayed_work(sec_bci.sec_battery_workq, &di->battery_polling_work, sec_bci.battery.monitor_duration * HZ); 
+    
+    queue_delayed_work( sec_bci.sec_battery_workq, &di->battery_monitor_work, HZ/2 );
 
     return 0;
 }
