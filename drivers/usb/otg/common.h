@@ -112,37 +112,37 @@ typedef struct {
 }BATTERY_INFO;
 
 #define BATT_PTG_WARN_1ST	15
-#define BATT_PTG_WARN_2ND	10
-#define BATT_PTG_WARN_OFF	5
+#define BATT_PTG_WARN_2ND	3
+#define BATT_PTG_WARN_OFF	0
 
 // info-capacity: battery icon (stat_sys_battery.xml)
 // 100, 79, 64, 49, 34, 19, 4
 #define	BATT_PTG_100	100
-#define	BATT_PTG_95	100
+#define	BATT_PTG_95	95
 #define	BATT_PTG_90	90
-#define	BATT_PTG_85	90
+#define	BATT_PTG_85	85
 #define	BATT_PTG_80	80
-#define	BATT_PTG_75	80
+#define	BATT_PTG_75	75
 #define	BATT_PTG_70	70
-#define	BATT_PTG_65	70
+#define	BATT_PTG_65	65
 #define	BATT_PTG_60	60
-#define	BATT_PTG_55	50
+#define	BATT_PTG_55	55
 #define	BATT_PTG_50	50
-#define	BATT_PTG_45	40
+#define	BATT_PTG_45	45
 #define	BATT_PTG_40	40
-#define	BATT_PTG_35	30
+#define	BATT_PTG_35	35
 #define	BATT_PTG_30	30
-#define	BATT_PTG_25	20
+#define	BATT_PTG_25	25
 #define	BATT_PTG_20	20
 #define	BATT_PTG_15	15
-#define	BATT_PTG_10	15
-#define	BATT_PTG_05	10
-#define	BATT_PTG_04	9
-#define	BATT_PTG_03	8
-#define	BATT_PTG_02	7
-#define	BATT_PTG_01	6
-#define	BATT_PTG_00	5
-#define	BATT_PTG_OFF	5
+#define	BATT_PTG_10	10
+#define	BATT_PTG_05	5
+#define	BATT_PTG_04	4
+#define	BATT_PTG_03	3
+#define	BATT_PTG_02	2
+#define	BATT_PTG_01	1
+#define	BATT_PTG_00	0
+#define	BATT_PTG_OFF	0
 
 #if 1 // phill-it: bhji (match: adc-3rd)
 #define	BATT_VOL_100	4130
