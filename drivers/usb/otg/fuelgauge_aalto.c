@@ -1,12 +1,17 @@
-/*
- * fuelgauge_adc_emul.c
- *
- * SW Fuel Gauge Emulator using VBAT adc
- *
- * Copyright (C) 2011 SAMSUNG ELECTRONICS.
- * Author: Jaemin Yoo
- *
- * This package is free software; you can redistribute it and/or modify
+/* Battery fuel gauge emulator for Samsung Galaxy Player 3.6 (YP-GS1) */
+
+/* Our device doesn't has a fuel gauge chip system. 
+ * For having battery vales (%) we need to emulate a fuel gauge.
+ * This "script" reads the voltage values from the battery (1500 mAh) 
+ * and then sets the right percentage values
+ */
+
+/* Copyright (C) 2011 SAMSUNG ELECTRONICS.
+ * Jaemin Yoo, 2011: author
+ * Androthan, androthan<at>gmail<dot>com, 2015: optimizations and enhancements
+ */
+
+/* This package is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  *
@@ -30,7 +35,7 @@
 		   value. Keep this in mind!  
    NOTE3 : voltage margin is +-0.04v except recharging voltage for MP3 or MID products
    NOTE4 : Can't we just use HW fuel gauge? -.-
-   NOTE5: this fuel gauge is not hw accelerated :/
+   NOTE5 : this fuel gauge is not hw accelerated :/
 */
 
 /* Use this if you don't need high(?) precision battery status bar */
@@ -42,7 +47,7 @@
 #define BATT_LVL1		583    ///* 3.60v   ~5% 
 #define BATT_LVL_OFF    575    ///* 3.40v (fixed) 
 
-#define BATT_RECHARGING	700		/* 4.13v (fixed) +-0.02v margin */
+#define BATT_RECHARGING	701		/* 4.13v (fixed) +-0.02v margin */
 
 #define BATT_ADC_CHK_INTERVAL	200	/* milli-seconds */
 #define BATT_ADC_AVG_WINDOW		30	/* # of sampling numbers */
@@ -199,8 +204,8 @@ static int get_batt_adc(bool is_sleep)
 	int max = -1;
 	int sum = 0;
 	int i = 0;
-
-	int sampling_size = 5;
+ 
+	int sampling_size = 5;  //precise values ------ or 1 ?!  // @adrt.15
 
 	adc = get_vbat_adc(is_sleep);
 	min = max = adc;
@@ -241,10 +246,7 @@ static void get_batt_info(int count, bool is_sleep)
 //+ phill-it: 20110908
 #ifdef __BATTERY_COMPENSATION__
 	if(!sec_bci->charger.is_charging){
-		//dbgPrintk("[fuelgauge]: avg_adc= %d \n", avg_adc);
-		//dbgPrintk("[fuelgauge]: %s, device_state=0x%x, compensation=%d\n", __func__, sec_bci->battery.device_state, adc_compensate);
 		adc += adc_compensate;
-		//dbgPrintk("[fuelgauge]: avg_adc + adc_compensate= %d \n", avg_adc);
 	}
 #endif
 	avg_adc = calc_avg_adc(adc, is_sleep);
@@ -262,7 +264,6 @@ static void get_batt_info(int count, bool is_sleep)
 					if (booting) {
 						if (idx_change_cnt > 25) {
 							idx_change_cnt = 0;
-							//printk("[%s] change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
 							if (prev_idx != i) {
 								if (sec_bci->charger.is_charging)
 									prev_idx > i ? prev_idx-- : prev_idx;
@@ -282,68 +283,8 @@ static void get_batt_info(int count, bool is_sleep)
 				else{
 					prev_idx = i;
 					idx_change_cnt = 0;
-					//printk("[%s] sleep change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
 				}
 
-//		printk("[%s] idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-		batt_avg_info = battery_table[prev_idx];
-		return;
-		}
-	}
-	prev_idx = -1;
-	batt_avg_info = battery_table[array_size-1];
-}
-#endif
-#if 0
-static void get_batt_info(int count, bool is_sleep)
-{
-	int array_size = ARRAY_SIZE(battery_table);
-	int adc;
-	int avg_adc;
-	int i;
-	static int prev_idx = -1;
-	static unsigned char idx_change_cnt = 0;
-	static bool booting = false
-
-	adc = get_batt_adc(is_sleep);
-//+ phill-it: 20110908
-#ifdef __BATTERY_COMPENSATION__
-	if(!sec_bci->charger.is_charging){
-		//dbgPrintk("[fuelgauge]: avg_adc= %d \n", avg_adc);
-		//dbgPrintk("[fuelgauge]: %s, device_state=0x%x, compensation=%d\n", __func__, sec_bci->battery.device_state, adc_compensate);
-		adc += adc_compensate;
-		//dbgPrintk("[fuelgauge]: avg_adc + adc_compensate= %d \n", avg_adc);
-	}
-#endif
-	avg_adc = calc_avg_adc(adc, is_sleep);
-	dbgPrintk("avg_adc:%d \n", avg_adc);
-
-	for (i = 0; i < array_size; i++)
-	{
-		if (avg_adc >= battery_table[i].adc) 
-		{
-			if (prev_idx < 0)
-				prev_idx = i;
-
-				if(!is_sleep){
-					if (++idx_change_cnt > 25) {
-						idx_change_cnt = 0;
-						//printk("[%s] change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-						if (prev_idx != i) {
-							if (sec_bci->charger.is_charging)
-								prev_idx > i ? prev_idx-- : prev_idx;
-							else
-								prev_idx > i ? prev_idx : prev_idx++;
-						}
-					}
-				}
-				else{
-					prev_idx = i;
-					idx_change_cnt = 0;
-					//printk("[%s] sleep change idx:%d prev_idx:%d\n", __func__, i, prev_idx);
-				}
-
-//		printk("[%s] idx:%d prev_idx:%d\n", __func__, i, prev_idx);
 		batt_avg_info = battery_table[prev_idx];
 		return;
 		}
@@ -457,8 +398,6 @@ static void adcfg_work_handler(struct work_struct *work)
 
 		get_batt_info(5, false);
 		adcfg_lowbat_detect();
-
-		//printk("[ADCFG] %s : VOL(%d), CAPA(%d), ADC(%d)\n", __func__, batt_avg_info.voltage, batt_avg_info.capacity, batt_avg_info.adc);
 	}
 
 	queue_delayed_work(adcfg_workq, &adcfg_work, msecs_to_jiffies(BATT_ADC_CHK_INTERVAL));

@@ -8,7 +8,7 @@ obj-$(CONFIG_USB_OTG_UTILS)	+= otg.o
 obj-$(CONFIG_MICROUSBIC_INTR)	+= microusbic/
 obj-$(CONFIG_FSA9480_MICROUSB)	+= fsa9480_i2c.o
 obj-$(CONFIG_MAX14577_MICROUSB)	+= MD_MAX14577.o charger_max14577.o 
-obj-$(CONFIG_BATTERY_AALTO)	+= battery_monitor.o fuelgauge_adc_emul.o sleep_i2c1.o sleep_i2c2.o sleep_madc.o
+obj-$(CONFIG_BATTERY_AALTO)	+= battery_monitor.o fuelgauge_aalto.o sleep_i2c1.o sleep_i2c2.o sleep_madc.o
 
 # transceiver drivers
 obj-$(CONFIG_USB_GPIO_VBUS)	+= gpio_vbus.o

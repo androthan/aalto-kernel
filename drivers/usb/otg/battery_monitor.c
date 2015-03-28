@@ -929,7 +929,6 @@ static int get_battery_level_adc( bool flag )
 		value = get_fuelgauge_adc_value( 5, CHARGE_DUR_ACTIVE, 0 );
 		if (value < 0) {
 			value = sec_bci.battery.battery_level_vol;
-			//printk("[BM]get_fuelgauge_adc_value return data < 0 %d\n",sec_bci.battery.battery_level_vol);
 		}
 
 		avr_vol = average_battery(BATT_VOL_AVG, value);
@@ -938,7 +937,7 @@ static int get_battery_level_adc( bool flag )
 #ifdef CONFIG_SAMSUNG_BATTERY_TESTMODE
     return 4100;
 #else
-	//printk("[BM] %s return data %d\n",__func__,value);
+
     return value;
 #endif
 	} else {
@@ -977,17 +976,6 @@ static int get_battery_level_ptg( void )
     int value;
 
     value = get_fuelgauge_ptg_value( CHARGE_DUR_ACTIVE );
-	//printk("[BM] %s return data %d\n",__func__,value);
-
-	/* adjust percentage value for Latona */
-	//if(!sec_bci.charger.is_charging)
-//	value = get_adjusted_battery_ptg(value);
-
-	/*
-    if ( sec_bci.charger.is_charging && value >= 100)
-        value = 99;
-    */
-	//P110106-0134
     if (( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL ) || ( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL))
 		value = 100;
 

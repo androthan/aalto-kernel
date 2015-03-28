@@ -84,13 +84,13 @@
 #define STATUS_CATEGORY_ETC         4
 
 //+ phill-it: 20110908
-// project-lowpower-aalto: may causes issues                     DEBUG
+// project-lowpower-aalto: may causes issues                     DEBUG @adrt.15
 #ifdef __BATTERY_COMPENSATION__
 #define COMPENSATE_DEFAULT          3  //3
 #define COMPENSATE_MP3              3  //3
 #define COMPENSATE_VIDEO            5  //5,6
 #define COMPENSATE_CAMERA_PREVIEW   4 //5
-#define COMPENSATE_CAMERA_RECORDING   8 //9,10
+#define COMPENSATE_CAMERA_RECORDING   7 //9,10
 #define COMPENSATE_EBOOK            3
 #define COMPENSATE_WIFI_BROWSING    3
 #define COMPENSATE_BROWSER          3
@@ -120,21 +120,21 @@ typedef struct {
 // 100, 79, 64, 49, 34, 19, 4
 #define	BATT_PTG_100	100
 #define	BATT_PTG_95	100
-#define	BATT_PTG_90	90
+#define	BATT_PTG_90	95
 #define	BATT_PTG_85	90
-#define	BATT_PTG_80	80
+#define	BATT_PTG_80	85
 #define	BATT_PTG_75	80
-#define	BATT_PTG_70	70
+#define	BATT_PTG_70	75
 #define	BATT_PTG_65	70
-#define	BATT_PTG_60	60
+#define	BATT_PTG_60	65
 #define	BATT_PTG_55	60
-#define	BATT_PTG_50	50
+#define	BATT_PTG_50	55
 #define	BATT_PTG_45	50
-#define	BATT_PTG_40	40
+#define	BATT_PTG_40	45
 #define	BATT_PTG_35	40
-#define	BATT_PTG_30	30
+#define	BATT_PTG_30	35
 #define	BATT_PTG_25	30
-#define	BATT_PTG_20	20
+#define	BATT_PTG_20	25
 #define	BATT_PTG_15	20
 #define	BATT_PTG_10	15
 #define	BATT_PTG_05	10
@@ -176,29 +176,29 @@ typedef struct {
 
 #if 1 // phill-it: bhji (4th)
 #define	BATT_ADC_100	701
-#define	BATT_ADC_95	695
-#define	BATT_ADC_90	688
-#define	BATT_ADC_85	677
-#define	BATT_ADC_80	665
-#define	BATT_ADC_75	664
-#define	BATT_ADC_70	660
-#define	BATT_ADC_65	654
-#define	BATT_ADC_60	652
-#define	BATT_ADC_55	649
-#define	BATT_ADC_50	640
-#define	BATT_ADC_45	638
-#define	BATT_ADC_40	636
-#define	BATT_ADC_35	631
-#define	BATT_ADC_30	629
-#define	BATT_ADC_25	626
-#define	BATT_ADC_20	620
-#define	BATT_ADC_15	618
-#define	BATT_ADC_10	616
-#define	BATT_ADC_05	613
-#define	BATT_ADC_04	611
-#define	BATT_ADC_03	600
-#define	BATT_ADC_02	587
-#define	BATT_ADC_01	573
+#define	BATT_ADC_95	696
+#define	BATT_ADC_90	691
+#define	BATT_ADC_85	686
+#define	BATT_ADC_80	671
+#define	BATT_ADC_75	666     //is the devil behind our battery?!
+#define	BATT_ADC_70	661
+#define	BATT_ADC_65	656
+#define	BATT_ADC_60	651
+#define	BATT_ADC_55	646
+#define	BATT_ADC_50	641
+#define	BATT_ADC_45	636
+#define	BATT_ADC_40	631
+#define	BATT_ADC_35	626
+#define	BATT_ADC_30	621
+#define	BATT_ADC_25	616
+#define	BATT_ADC_20	611
+#define	BATT_ADC_15	606
+#define	BATT_ADC_10	601
+#define	BATT_ADC_05	596
+#define	BATT_ADC_04	591
+#define	BATT_ADC_03	586
+#define	BATT_ADC_02	581
+#define	BATT_ADC_01	576
 #define	BATT_ADC_00	571
 #define	BATT_ADC_OFF	571
 #endif
