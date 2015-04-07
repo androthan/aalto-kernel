@@ -20,9 +20,9 @@ static struct pvrsrv_attribute PVRSRVAttr = {
 #if defined(SGX544)
 	.sgx_version = 544,
 	.sgx_revision = 112,
-#else
-	.sgx_version = 540,
-	.sgx_revision = 120,
+#else //adrt.15
+	.sgx_version = 530,
+	.sgx_revision = 125,
 #endif
 };
 
