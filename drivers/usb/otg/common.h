@@ -18,7 +18,7 @@
 //+ phill-it: bhji
 #define APPLY_AUTOSTOP_MODE
 #define APPLY_WORKAROUND_LOWBATTERY
-#define __BATTERY_COMPENSATION__
+//#define __BATTERY_COMPENSATION__ : does not work on newer Android versions -- adrt.15
 
 //#define BATTERY_DEBUG
 #ifdef BATTERY_DEBUG
@@ -39,7 +39,7 @@
 #define MONITOR_RECHG_VOL_DURATION  	30
 
 
-#if defined(CONFIG_CHN_KERNEL_STE_LATONA)
+#if 0
 #define DEFAULT_CHARGING_TIMEOUT        6 * 60 * 60
 #define DEFAULT_RECHARGING_TIMEOUT        (1 * 60 * 60 + 30 * 60)
 
@@ -55,17 +55,17 @@
 #define CHARGE_RECOVER_TEMPERATURE_EVENT    60
 #else
 #define DEFAULT_CHARGING_TIMEOUT        6 * 60 * 60
-#define DEFAULT_RECHARGING_TIMEOUT        (1 * 60 * 60 + 30 * 60)
+#define DEFAULT_RECHARGING_TIMEOUT        1500 // faster charging -- adrt.15
 
 #define CHARGE_STOP_TEMPERATURE_MAX     	65
-#define CHARGE_RECOVER_TEMPERATURE_MAX      43 // 55
+#define CHARGE_RECOVER_TEMPERATURE_MAX      45 // 55
 #define CHARGE_STOP_TEMPERATURE_MIN     	-5 //0
-#define CHARGE_RECOVER_TEMPERATURE_MIN      0 //3
+#define CHARGE_RECOVER_TEMPERATURE_MIN      5 //3
 
-#define CHARGE_OFFMODE_STOP_TEMPERATURE_MAX     	54
-#define CHARGE_OFFMODE_RECOVER_TEMPERATURE_MAX      34
-#define CHARGE_OFFMODE_STOP_TEMPERATURE_MIN     	-15 //-5 //0
-#define CHARGE_OFFMODE_RECOVER_TEMPERATURE_MIN      -9 //0 //3
+#define CHARGE_OFFMODE_STOP_TEMPERATURE_MAX     	55
+#define CHARGE_OFFMODE_RECOVER_TEMPERATURE_MAX      35
+#define CHARGE_OFFMODE_STOP_TEMPERATURE_MIN     	-10 //-5 //0
+#define CHARGE_OFFMODE_RECOVER_TEMPERATURE_MIN      -5 //0 //3
 
 #define CHARGE_RECHG_VOLTAGE            	4130
 #define CHARGE_RECHG_VOLTAGE_OFFMODE       	4130
@@ -175,7 +175,7 @@ typedef struct {
 #endif
 
 #if 1 // phill-it: bhji (4th)
-#define	BATT_ADC_100	701
+#define	BATT_ADC_100	700     // 701 -- adrt.15
 #define	BATT_ADC_95	696
 #define	BATT_ADC_90	691
 #define	BATT_ADC_85	686
@@ -298,139 +298,3 @@ typedef struct
 }SEC_battery_charger_info;
 
 #endif
-
-
-// backup adc table
-#if 0
-#define	BATT_VOL_100	4130
-#define	BATT_VOL_95	4090
-#define	BATT_VOL_90	4050
-#define	BATT_VOL_85	4018
-#define	BATT_VOL_80	3988
-#define	BATT_VOL_75	3948
-#define	BATT_VOL_70	3908
-#define	BATT_VOL_65	3877
-#define	BATT_VOL_60	3837
-#define	BATT_VOL_55	3807
-#define	BATT_VOL_50	3767
-#define	BATT_VOL_45	3727
-#define	BATT_VOL_40	3697
-#define	BATT_VOL_35	3657
-#define	BATT_VOL_30	3617
-#define	BATT_VOL_25	3586
-#define	BATT_VOL_20	3546
-#define	BATT_VOL_15	3516
-#define	BATT_VOL_10	3476
-#define	BATT_VOL_05	3436
-#define	BATT_VOL_03	3426
-#define	BATT_VOL_01	3416
-#define	BATT_VOL_00	3400
-#define	BATT_VOL_OFF	3400
-#endif
-#if 0 // phill-it: bhji (match: adc-2nd)
-#define	BATT_VOL_100  4130
-#define	BATT_VOL_95   4090
-#define	BATT_VOL_90   4050
-#define	BATT_VOL_85   4030
-#define	BATT_VOL_80   4000
-#define	BATT_VOL_75   3975
-#define	BATT_VOL_70   3945
-#define	BATT_VOL_65   3915
-#define	BATT_VOL_60   3880
-#define	BATT_VOL_55   3855
-#define	BATT_VOL_50   3825
-#define	BATT_VOL_45   3800
-#define	BATT_VOL_40   3770
-#define	BATT_VOL_35   3740
-#define	BATT_VOL_30   3710
-#define	BATT_VOL_25   3675
-#define	BATT_VOL_20   3635
-#define	BATT_VOL_15   3590
-#define	BATT_VOL_10   3540
-#define	BATT_VOL_05   3480
-#define	BATT_VOL_03   3435
-#define	BATT_VOL_01   3420
-#define	BATT_VOL_00   3400
-#define	BATT_VOL_OFF  3400
-#endif
-
-#if 0
-#define	BATT_ADC_100	701
-#define	BATT_ADC_95	695
-#define	BATT_ADC_90	688
-#define	BATT_ADC_85	681
-#define	BATT_ADC_80	676
-#define	BATT_ADC_75	669
-#define	BATT_ADC_70	663
-#define	BATT_ADC_65	657
-#define	BATT_ADC_60	651
-#define	BATT_ADC_55	645
-#define	BATT_ADC_50	639
-#define	BATT_ADC_45	632
-#define	BATT_ADC_40	627
-#define	BATT_ADC_35	618		//org : 619
-#define	BATT_ADC_30	613
-#define	BATT_ADC_25	608
-#define	BATT_ADC_20	599		//org : 601
-#define	BATT_ADC_15	596
-#define	BATT_ADC_10	589
-#define	BATT_ADC_05	582
-#define	BATT_ADC_03	580
-#define	BATT_ADC_01	579
-#define	BATT_ADC_00	575
-#define	BATT_ADC_OFF	575
-#endif
-#if 0 // phill-it: bhji (1st)
-#define	BATT_ADC_100	701
-#define	BATT_ADC_95	695
-#define	BATT_ADC_90	688
-#define	BATT_ADC_85	683
-#define	BATT_ADC_80	678
-#define	BATT_ADC_75	673
-#define	BATT_ADC_70	668
-#define	BATT_ADC_65	663
-#define	BATT_ADC_60	658
-#define	BATT_ADC_55	653
-#define	BATT_ADC_50	648
-#define	BATT_ADC_45	643
-#define	BATT_ADC_40	638
-#define	BATT_ADC_35	632
-#define	BATT_ADC_30	625
-#define	BATT_ADC_25	618
-#define	BATT_ADC_20	610
-#define	BATT_ADC_15	602
-#define	BATT_ADC_10	594
-#define	BATT_ADC_05	586
-#define	BATT_ADC_03	581
-#define	BATT_ADC_01	578
-#define	BATT_ADC_00	575
-#define	BATT_ADC_OFF	575
-#endif
-#if 0 // phill-it: bhji (2nd)
-#define	BATT_ADC_100	701
-#define	BATT_ADC_95	695
-#define	BATT_ADC_90	688
-#define	BATT_ADC_85	683
-#define	BATT_ADC_80	678
-#define	BATT_ADC_75	673
-#define	BATT_ADC_70	668
-#define	BATT_ADC_65	663
-#define	BATT_ADC_60	658
-#define	BATT_ADC_55	653
-#define	BATT_ADC_50	648
-#define	BATT_ADC_45	643
-#define	BATT_ADC_40	638
-#define	BATT_ADC_35	633
-#define	BATT_ADC_30	628
-#define	BATT_ADC_25	622
-#define	BATT_ADC_20	615
-#define	BATT_ADC_15	607
-#define	BATT_ADC_10	598
-#define	BATT_ADC_05	589
-#define	BATT_ADC_03	581
-#define	BATT_ADC_01	578
-#define	BATT_ADC_00	575
-#define	BATT_ADC_OFF	575
-#endif
-
-

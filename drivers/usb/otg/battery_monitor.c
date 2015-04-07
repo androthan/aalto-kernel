@@ -552,9 +552,6 @@ int _charger_state_change_( int category, int value, bool is_sleep )
 
                 /*Stop monitoring the batt. level for Re-charging*/
                 sec_bci.battery.monitor_field_rechg_vol = false;
-
-				/*Not change the battery bar - keep battery full screen*/
-				//goto Out_Charger_State_Change;
                 break;
 
             case POWER_SUPPLY_STATUS_RECHARGING_FOR_TEMP :
@@ -977,7 +974,7 @@ static int get_battery_level_ptg( void )
 
     value = get_fuelgauge_ptg_value( CHARGE_DUR_ACTIVE );
     if (( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_FULL ) || ( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL))
-		value = 100;
+		value = 99;
 
     if(!boot_complete && value <= 0)
         value = 1;
@@ -1194,19 +1191,6 @@ static int battery_monitor_core( bool is_sleep )
 
     int charging_time;
 	//int rechg_voltage;
-
-#if 0
-	if(event_logging)
-	{
-		stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_EVENT;
-		recover_temperature_overheat = CHARGE_RECOVER_TEMPERATURE_EVENT;
-	}
-	else
-	{
-		stop_temperature_overheat = CHARGE_STOP_TEMPERATURE_MAX;
-		recover_temperature_overheat = CHARGE_RECOVER_TEMPERATURE_MAX;	
-	}
-#endif
 	
     /*Monitoring the system temperature*/
     if ( sec_bci.battery.monitor_field_temp )
@@ -1297,29 +1281,14 @@ static int battery_monitor_core( bool is_sleep )
         if ( sec_bci.battery.monitor_duration > MONITOR_RECHG_VOL_DURATION )
             sec_bci.battery.monitor_duration = MONITOR_RECHG_VOL_DURATION;
 
-/*
-		if(sec_bootmode == 5) // offmode charging
-			rechg_voltage = CHARGE_RECHG_VOLTAGE_OFFMODE;
-		else
-			rechg_voltage = CHARGE_RECHG_VOLTAGE;
-//*/
-
-	//rechg_voltage = BATT_VOL_95;	//jineokpark
-	//rechg_voltage = BATT_VOL_100;
-	//rechg_voltage = 4117;
-#ifdef FCHG_DBG
 	printk( "[BM] avg:%d vol:%d\n",
 					avr_vol,
 					sec_bci.battery.battery_level_vol);
-#endif
-//        if (sec_bci.battery.battery_level_vol <= rechg_voltage )
-//	if (avr_vol <= rechg_voltage)
 		if (avr_vol < CHARGE_RECHG_VOLTAGE)
         {
             sec_bci.battery.confirm_recharge++;
             if ( sec_bci.battery.confirm_recharge >= 2 )
             {
-#ifdef FCHG_DBG
 					printk( "[BM] RE-charging !!!\n");
 			        printk( "[BM] CORE monitor BATT.(%d%%, %dmV, %d, count=%d, charging=%d)\n", 
 				    sec_bci.battery.battery_level_ptg,
@@ -1327,7 +1296,6 @@ static int battery_monitor_core( bool is_sleep )
 				    sec_bci.battery.battery_temp,
 				    boot_monitor_count,
 				    sec_bci.charger.is_charging);
-#endif
                 sec_bci.battery.confirm_recharge = 0;   
 
                 //if ( is_sleep )
@@ -1632,13 +1600,6 @@ static int samsung_battery_get_property( struct power_supply *psy,
     switch ( psp ) 
     {
         case POWER_SUPPLY_PROP_STATUS:
-#if 0
-            if( sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_FULL 
-                || sec_bci.charger.charge_status == POWER_SUPPLY_STATUS_RECHARGING_FOR_TEMP )
-                val->intval = POWER_SUPPLY_STATUS_CHARGING;
-            else
-                val->intval = sec_bci.charger.charge_status;
-#endif
 			switch (sec_bci.charger.charge_status) {
 			case POWER_SUPPLY_STATUS_CHARGING_OVERTIME:
 			case POWER_SUPPLY_STATUS_FULL_DUR_SLEEP:
