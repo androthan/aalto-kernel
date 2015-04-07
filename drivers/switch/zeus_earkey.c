@@ -30,7 +30,6 @@
 #include <plat/mux.h>
 
 #include "./switch_omap_gpio.h"
-//#define CONFIG_DEBUG_SEC_HEADSET
 
 #ifdef CONFIG_DEBUG_SEC_HEADSET
 #define SEC_HEADSET_DBG(fmt, arg...) printk(KERN_INFO "[JACKKEY] %s" fmt "\r\n", __func__,## arg)
@@ -133,7 +132,7 @@ static void release_sysfs_event(struct work_struct *work)
 	        	        switch_set_state(&switch_sendend, 1);
 		       		input_report_key(ip_dev,KEYCODE_SENDEND,1);
 		                input_sync(ip_dev);
-				SEC_HEADSET_DBG("\tSEND/END key is working\n");
+				SEC_HEADSET_DBG("\tPLAY/PAUSE key was pressed\n");
 			 }
 			else if((adc_value > 70 ) && ( 160 > adc_value))
                 	 {       
@@ -141,7 +140,7 @@ static void release_sysfs_event(struct work_struct *work)
 	                         switch_set_state(&switch_sendend, 1);
 				 input_event(ip_dev, 1, KEYCODE_VOL_UP, earkey_stats);
                 	         input_sync(ip_dev);
-                        	 SEC_HEADSET_DBG("\tVOLUME UP key is working\n");                 
+                        	 SEC_HEADSET_DBG("\tVOLUME UP key was pressed\n");                 
                	 	}
 	       	         else if ((adc_value > 170 ) && ( 290 > adc_value))
 			 {
@@ -149,11 +148,11 @@ static void release_sysfs_event(struct work_struct *work)
                         	 switch_set_state(&switch_sendend, 1);
 	                         input_event(ip_dev, 1, KEYCODE_VOL_DW, earkey_stats);
         	                 input_sync(ip_dev);
-	        	         SEC_HEADSET_DBG("\tVOLUME DOWN key is working\n");
+	        	         SEC_HEADSET_DBG("\tVOLUME DOWN key was pressed\n");
 			 }		
 			else
 			{
-				SEC_HEADSET_DBG("\tadc value is too low or high. adc value is %d\n",adc_value);
+				SEC_HEADSET_DBG("\tADC value is too low or high. Headset not supported. ADC value is %d\n",adc_value);
 			}
 		}
 
@@ -165,7 +164,7 @@ static void release_sysfs_event(struct work_struct *work)
 				switch_set_state(&switch_sendend, 1);
 				input_report_key(ip_dev,KEYCODE_SENDEND,1);
 				input_sync(ip_dev);
-				SEC_HEADSET_DBG("\tSEND/END key is working\n");
+				SEC_HEADSET_DBG("\tPLAY/PAUSE key was pressed\n");
 			} 	
 			else if((adc_value > 65 ) && ( 140 > adc_value))
 			{
@@ -173,7 +172,7 @@ static void release_sysfs_event(struct work_struct *work)
 				switch_set_state(&switch_sendend, 1);
 				input_event(ip_dev, 1, KEYCODE_VOL_UP, earkey_stats);
 				input_sync(ip_dev);
-				SEC_HEADSET_DBG("\tVOLUME UP key is working\n");
+				SEC_HEADSET_DBG("\tVOLUME UP key was pressed\n");
 	
 			}
 			else if ((adc_value > 142 ) && ( 290 > adc_value))
@@ -182,11 +181,11 @@ static void release_sysfs_event(struct work_struct *work)
 				switch_set_state(&switch_sendend, 1);
 				input_event(ip_dev, 1, KEYCODE_VOL_DW, earkey_stats);
 				input_sync(ip_dev);
-				SEC_HEADSET_DBG("\tVOLUME DOWN key is working\n");
+				SEC_HEADSET_DBG("\tVOLUME DOWN key was pressed\n");
 			}	
 			else
 			{
-				SEC_HEADSET_DBG("\tadc value is too low or high. adc value is %d\n",adc_value);
+				SEC_HEADSET_DBG("\tADC value is too low or high. Headset not supported. ADC value is %d\n",adc_value);
 			}
 		}
 	}
@@ -466,6 +465,6 @@ static void __exit ear_key_driver_exit(void)
 module_exit(ear_key_driver_exit);
 
 MODULE_ALIAS("platform:ear key driver");
-MODULE_DESCRIPTION("board zeus ear key");
+MODULE_DESCRIPTION("Headset jack remote driver for OMAP3 platforms");
 MODULE_LICENSE("GPL");
 
