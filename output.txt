@@ -1,0 +1,342 @@
+/home/jonathan/android/kernel/aiva/scripts/setlocalversion: Zeile 164: Syntaxfehler: Unerwartetes Dateiende.
+  CHK     include/linux/version.h
+  CHK     include/generated/utsrelease.h
+make[1]: »include/generated/mach-types.h« ist bereits aktualisiert.
+  CALL    scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      drivers/gpu/pvr/omaplfb/omaplfb_linux.o
+In file included from include/video/dsscomp.h:5,
+                 from drivers/gpu/pvr/omaplfb/omaplfb_linux.c:248:
+arch/arm/plat-omap/include/plat/display.h:61: error: nested redefinition of 'enum omap_display_type'
+arch/arm/plat-omap/include/plat/display.h:61: error: redeclaration of 'enum omap_display_type'
+arch/arm/plat-omap/include/plat/display.h:62: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_NONE'
+include/video/omapdss.h:55: note: previous definition of 'OMAP_DISPLAY_TYPE_NONE' was here
+arch/arm/plat-omap/include/plat/display.h:63: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_DPI'
+include/video/omapdss.h:56: note: previous definition of 'OMAP_DISPLAY_TYPE_DPI' was here
+arch/arm/plat-omap/include/plat/display.h:64: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_DBI'
+include/video/omapdss.h:57: note: previous definition of 'OMAP_DISPLAY_TYPE_DBI' was here
+arch/arm/plat-omap/include/plat/display.h:65: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_SDI'
+include/video/omapdss.h:58: note: previous definition of 'OMAP_DISPLAY_TYPE_SDI' was here
+arch/arm/plat-omap/include/plat/display.h:66: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_DSI'
+include/video/omapdss.h:59: note: previous definition of 'OMAP_DISPLAY_TYPE_DSI' was here
+arch/arm/plat-omap/include/plat/display.h:67: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_VENC'
+include/video/omapdss.h:60: note: previous definition of 'OMAP_DISPLAY_TYPE_VENC' was here
+arch/arm/plat-omap/include/plat/display.h:68: error: redeclaration of enumerator 'OMAP_DISPLAY_TYPE_HDMI'
+include/video/omapdss.h:61: note: previous definition of 'OMAP_DISPLAY_TYPE_HDMI' was here
+arch/arm/plat-omap/include/plat/display.h:71: error: nested redefinition of 'enum omap_plane'
+arch/arm/plat-omap/include/plat/display.h:71: error: redeclaration of 'enum omap_plane'
+arch/arm/plat-omap/include/plat/display.h:72: error: redeclaration of enumerator 'OMAP_DSS_GFX'
+include/video/omapdss.h:65: note: previous definition of 'OMAP_DSS_GFX' was here
+arch/arm/plat-omap/include/plat/display.h:73: error: redeclaration of enumerator 'OMAP_DSS_VIDEO1'
+include/video/omapdss.h:66: note: previous definition of 'OMAP_DSS_VIDEO1' was here
+arch/arm/plat-omap/include/plat/display.h:74: error: redeclaration of enumerator 'OMAP_DSS_VIDEO2'
+include/video/omapdss.h:67: note: previous definition of 'OMAP_DSS_VIDEO2' was here
+arch/arm/plat-omap/include/plat/display.h:75: error: redeclaration of enumerator 'OMAP_DSS_VIDEO3'
+include/video/omapdss.h:68: note: previous definition of 'OMAP_DSS_VIDEO3' was here
+arch/arm/plat-omap/include/plat/display.h:79: error: nested redefinition of 'enum omap_channel'
+arch/arm/plat-omap/include/plat/display.h:79: error: redeclaration of 'enum omap_channel'
+arch/arm/plat-omap/include/plat/display.h:80: error: redeclaration of enumerator 'OMAP_DSS_CHANNEL_LCD'
+include/video/omapdss.h:72: note: previous definition of 'OMAP_DSS_CHANNEL_LCD' was here
+arch/arm/plat-omap/include/plat/display.h:81: error: redeclaration of enumerator 'OMAP_DSS_CHANNEL_DIGIT'
+include/video/omapdss.h:73: note: previous definition of 'OMAP_DSS_CHANNEL_DIGIT' was here
+arch/arm/plat-omap/include/plat/display.h:82: error: redeclaration of enumerator 'OMAP_DSS_CHANNEL_LCD2'
+include/video/omapdss.h:74: note: previous definition of 'OMAP_DSS_CHANNEL_LCD2' was here
+arch/arm/plat-omap/include/plat/display.h:85: error: nested redefinition of 'enum omap_color_mode'
+arch/arm/plat-omap/include/plat/display.h:85: error: redeclaration of 'enum omap_color_mode'
+arch/arm/plat-omap/include/plat/display.h:86: error: redeclaration of enumerator 'OMAP_DSS_COLOR_CLUT1'
+include/video/omapdss.h:78: note: previous definition of 'OMAP_DSS_COLOR_CLUT1' was here
+arch/arm/plat-omap/include/plat/display.h:87: error: redeclaration of enumerator 'OMAP_DSS_COLOR_CLUT2'
+include/video/omapdss.h:79: note: previous definition of 'OMAP_DSS_COLOR_CLUT2' was here
+arch/arm/plat-omap/include/plat/display.h:88: error: redeclaration of enumerator 'OMAP_DSS_COLOR_CLUT4'
+include/video/omapdss.h:80: note: previous definition of 'OMAP_DSS_COLOR_CLUT4' was here
+arch/arm/plat-omap/include/plat/display.h:89: error: redeclaration of enumerator 'OMAP_DSS_COLOR_CLUT8'
+include/video/omapdss.h:81: note: previous definition of 'OMAP_DSS_COLOR_CLUT8' was here
+arch/arm/plat-omap/include/plat/display.h:90: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGB12U'
+include/video/omapdss.h:82: note: previous definition of 'OMAP_DSS_COLOR_RGB12U' was here
+arch/arm/plat-omap/include/plat/display.h:91: error: redeclaration of enumerator 'OMAP_DSS_COLOR_ARGB16'
+include/video/omapdss.h:83: note: previous definition of 'OMAP_DSS_COLOR_ARGB16' was here
+arch/arm/plat-omap/include/plat/display.h:92: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGB16'
+include/video/omapdss.h:84: note: previous definition of 'OMAP_DSS_COLOR_RGB16' was here
+arch/arm/plat-omap/include/plat/display.h:93: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGB24U'
+include/video/omapdss.h:85: note: previous definition of 'OMAP_DSS_COLOR_RGB24U' was here
+arch/arm/plat-omap/include/plat/display.h:94: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGB24P'
+include/video/omapdss.h:86: note: previous definition of 'OMAP_DSS_COLOR_RGB24P' was here
+arch/arm/plat-omap/include/plat/display.h:95: error: redeclaration of enumerator 'OMAP_DSS_COLOR_YUV2'
+include/video/omapdss.h:87: note: previous definition of 'OMAP_DSS_COLOR_YUV2' was here
+arch/arm/plat-omap/include/plat/display.h:96: error: redeclaration of enumerator 'OMAP_DSS_COLOR_UYVY'
+include/video/omapdss.h:88: note: previous definition of 'OMAP_DSS_COLOR_UYVY' was here
+arch/arm/plat-omap/include/plat/display.h:97: error: redeclaration of enumerator 'OMAP_DSS_COLOR_ARGB32'
+include/video/omapdss.h:89: note: previous definition of 'OMAP_DSS_COLOR_ARGB32' was here
+arch/arm/plat-omap/include/plat/display.h:98: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGBA32'
+include/video/omapdss.h:90: note: previous definition of 'OMAP_DSS_COLOR_RGBA32' was here
+arch/arm/plat-omap/include/plat/display.h:99: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGBX32'
+include/video/omapdss.h:91: note: previous definition of 'OMAP_DSS_COLOR_RGBX32' was here
+arch/arm/plat-omap/include/plat/display.h:100: error: redeclaration of enumerator 'OMAP_DSS_COLOR_NV12'
+include/video/omapdss.h:92: note: previous definition of 'OMAP_DSS_COLOR_NV12' was here
+arch/arm/plat-omap/include/plat/display.h:103: error: redeclaration of enumerator 'OMAP_DSS_COLOR_ARGB16_1555'
+include/video/omapdss.h:95: note: previous definition of 'OMAP_DSS_COLOR_ARGB16_1555' was here
+arch/arm/plat-omap/include/plat/display.h:147: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGBA16'
+include/video/omapdss.h:93: note: previous definition of 'OMAP_DSS_COLOR_RGBA16' was here
+arch/arm/plat-omap/include/plat/display.h:148: error: redeclaration of enumerator 'OMAP_DSS_COLOR_RGBX16'
+include/video/omapdss.h:94: note: previous definition of 'OMAP_DSS_COLOR_RGBX16' was here
+arch/arm/plat-omap/include/plat/display.h:149: error: redeclaration of enumerator 'OMAP_DSS_COLOR_XRGB16_1555'
+include/video/omapdss.h:96: note: previous definition of 'OMAP_DSS_COLOR_XRGB16_1555' was here
+arch/arm/plat-omap/include/plat/display.h:152: error: nested redefinition of 'enum omapdss_completion_status'
+arch/arm/plat-omap/include/plat/display.h:152: error: redeclaration of 'enum omapdss_completion_status'
+arch/arm/plat-omap/include/plat/display.h:153: error: redeclaration of enumerator 'DSS_COMPLETION_PROGRAMMED'
+include/video/omapdss.h:336: note: previous definition of 'DSS_COMPLETION_PROGRAMMED' was here
+arch/arm/plat-omap/include/plat/display.h:154: error: redeclaration of enumerator 'DSS_COMPLETION_DISPLAYED'
+include/video/omapdss.h:337: note: previous definition of 'DSS_COMPLETION_DISPLAYED' was here
+arch/arm/plat-omap/include/plat/display.h:156: error: redeclaration of enumerator 'DSS_COMPLETION_CHANGED_SET'
+include/video/omapdss.h:339: note: previous definition of 'DSS_COMPLETION_CHANGED_SET' was here
+arch/arm/plat-omap/include/plat/display.h:157: error: redeclaration of enumerator 'DSS_COMPLETION_CHANGED_CACHE'
+include/video/omapdss.h:340: note: previous definition of 'DSS_COMPLETION_CHANGED_CACHE' was here
+arch/arm/plat-omap/include/plat/display.h:158: error: redeclaration of enumerator 'DSS_COMPLETION_CHANGED'
+include/video/omapdss.h:341: note: previous definition of 'DSS_COMPLETION_CHANGED' was here
+arch/arm/plat-omap/include/plat/display.h:160: error: redeclaration of enumerator 'DSS_COMPLETION_RELEASED'
+include/video/omapdss.h:343: note: previous definition of 'DSS_COMPLETION_RELEASED' was here
+arch/arm/plat-omap/include/plat/display.h:161: error: redeclaration of enumerator 'DSS_COMPLETION_ECLIPSED_SET'
+include/video/omapdss.h:344: note: previous definition of 'DSS_COMPLETION_ECLIPSED_SET' was here
+arch/arm/plat-omap/include/plat/display.h:162: error: redeclaration of enumerator 'DSS_COMPLETION_ECLIPSED_CACHE'
+include/video/omapdss.h:345: note: previous definition of 'DSS_COMPLETION_ECLIPSED_CACHE' was here
+arch/arm/plat-omap/include/plat/display.h:163: error: redeclaration of enumerator 'DSS_COMPLETION_ECLIPSED_SHADOW'
+include/video/omapdss.h:346: note: previous definition of 'DSS_COMPLETION_ECLIPSED_SHADOW' was here
+arch/arm/plat-omap/include/plat/display.h:164: error: redeclaration of enumerator 'DSS_COMPLETION_TORN'
+include/video/omapdss.h:347: note: previous definition of 'DSS_COMPLETION_TORN' was here
+arch/arm/plat-omap/include/plat/display.h:167: error: redefinition of 'struct omapdss_ovl_cb'
+arch/arm/plat-omap/include/plat/display.h:174: error: nested redefinition of 'enum omap_lcd_display_type'
+arch/arm/plat-omap/include/plat/display.h:174: error: redeclaration of 'enum omap_lcd_display_type'
+arch/arm/plat-omap/include/plat/display.h:175: error: redeclaration of enumerator 'OMAP_DSS_LCD_DISPLAY_STN'
+include/video/omapdss.h:100: note: previous definition of 'OMAP_DSS_LCD_DISPLAY_STN' was here
+arch/arm/plat-omap/include/plat/display.h:176: error: redeclaration of enumerator 'OMAP_DSS_LCD_DISPLAY_TFT'
+include/video/omapdss.h:101: note: previous definition of 'OMAP_DSS_LCD_DISPLAY_TFT' was here
+arch/arm/plat-omap/include/plat/display.h:179: error: nested redefinition of 'enum omap_dss_load_mode'
+arch/arm/plat-omap/include/plat/display.h:179: error: redeclaration of 'enum omap_dss_load_mode'
+arch/arm/plat-omap/include/plat/display.h:180: error: redeclaration of enumerator 'OMAP_DSS_LOAD_CLUT_AND_FRAME'
+include/video/omapdss.h:105: note: previous definition of 'OMAP_DSS_LOAD_CLUT_AND_FRAME' was here
+arch/arm/plat-omap/include/plat/display.h:181: error: redeclaration of enumerator 'OMAP_DSS_LOAD_CLUT_ONLY'
+include/video/omapdss.h:106: note: previous definition of 'OMAP_DSS_LOAD_CLUT_ONLY' was here
+arch/arm/plat-omap/include/plat/display.h:182: error: redeclaration of enumerator 'OMAP_DSS_LOAD_FRAME_ONLY'
+include/video/omapdss.h:107: note: previous definition of 'OMAP_DSS_LOAD_FRAME_ONLY' was here
+arch/arm/plat-omap/include/plat/display.h:183: error: redeclaration of enumerator 'OMAP_DSS_LOAD_CLUT_ONCE_FRAME'
+include/video/omapdss.h:108: note: previous definition of 'OMAP_DSS_LOAD_CLUT_ONCE_FRAME' was here
+arch/arm/plat-omap/include/plat/display.h:186: error: nested redefinition of 'enum omap_dss_trans_key_type'
+arch/arm/plat-omap/include/plat/display.h:186: error: redeclaration of 'enum omap_dss_trans_key_type'
+arch/arm/plat-omap/include/plat/display.h:187: error: redeclaration of enumerator 'OMAP_DSS_COLOR_KEY_GFX_DST'
+include/video/omapdss.h:112: note: previous definition of 'OMAP_DSS_COLOR_KEY_GFX_DST' was here
+arch/arm/plat-omap/include/plat/display.h:188: error: redeclaration of enumerator 'OMAP_DSS_COLOR_KEY_VID_SRC'
+include/video/omapdss.h:113: note: previous definition of 'OMAP_DSS_COLOR_KEY_VID_SRC' was here
+arch/arm/plat-omap/include/plat/display.h:191: error: nested redefinition of 'enum omap_rfbi_te_mode'
+arch/arm/plat-omap/include/plat/display.h:191: error: redeclaration of 'enum omap_rfbi_te_mode'
+arch/arm/plat-omap/include/plat/display.h:192: error: redeclaration of enumerator 'OMAP_DSS_RFBI_TE_MODE_1'
+include/video/omapdss.h:117: note: previous definition of 'OMAP_DSS_RFBI_TE_MODE_1' was here
+arch/arm/plat-omap/include/plat/display.h:193: error: redeclaration of enumerator 'OMAP_DSS_RFBI_TE_MODE_2'
+include/video/omapdss.h:118: note: previous definition of 'OMAP_DSS_RFBI_TE_MODE_2' was here
+arch/arm/plat-omap/include/plat/display.h:196: error: nested redefinition of 'enum omap_panel_config'
+arch/arm/plat-omap/include/plat/display.h:196: error: redeclaration of 'enum omap_panel_config'
+arch/arm/plat-omap/include/plat/display.h:197: error: redeclaration of enumerator 'OMAP_DSS_LCD_IVS'
+include/video/omapdss.h:122: note: previous definition of 'OMAP_DSS_LCD_IVS' was here
+arch/arm/plat-omap/include/plat/display.h:198: error: redeclaration of enumerator 'OMAP_DSS_LCD_IHS'
+include/video/omapdss.h:123: note: previous definition of 'OMAP_DSS_LCD_IHS' was here
+arch/arm/plat-omap/include/plat/display.h:199: error: redeclaration of enumerator 'OMAP_DSS_LCD_IPC'
+include/video/omapdss.h:124: note: previous definition of 'OMAP_DSS_LCD_IPC' was here
+arch/arm/plat-omap/include/plat/display.h:200: error: redeclaration of enumerator 'OMAP_DSS_LCD_IEO'
+include/video/omapdss.h:125: note: previous definition of 'OMAP_DSS_LCD_IEO' was here
+arch/arm/plat-omap/include/plat/display.h:201: error: redeclaration of enumerator 'OMAP_DSS_LCD_RF'
+include/video/omapdss.h:126: note: previous definition of 'OMAP_DSS_LCD_RF' was here
+arch/arm/plat-omap/include/plat/display.h:202: error: redeclaration of enumerator 'OMAP_DSS_LCD_ONOFF'
+include/video/omapdss.h:127: note: previous definition of 'OMAP_DSS_LCD_ONOFF' was here
+arch/arm/plat-omap/include/plat/display.h:203: error: redeclaration of enumerator 'OMAP_DSS_LCD_TFT'
+include/video/omapdss.h:129: note: previous definition of 'OMAP_DSS_LCD_TFT' was here
+arch/arm/plat-omap/include/plat/display.h:206: error: nested redefinition of 'enum omap_dss_venc_type'
+arch/arm/plat-omap/include/plat/display.h:206: error: redeclaration of 'enum omap_dss_venc_type'
+arch/arm/plat-omap/include/plat/display.h:207: error: redeclaration of enumerator 'OMAP_DSS_VENC_TYPE_COMPOSITE'
+include/video/omapdss.h:138: note: previous definition of 'OMAP_DSS_VENC_TYPE_COMPOSITE' was here
+arch/arm/plat-omap/include/plat/display.h:208: error: redeclaration of enumerator 'OMAP_DSS_VENC_TYPE_SVIDEO'
+include/video/omapdss.h:139: note: previous definition of 'OMAP_DSS_VENC_TYPE_SVIDEO' was here
+arch/arm/plat-omap/include/plat/display.h:211: error: nested redefinition of 'enum omap_display_caps'
+arch/arm/plat-omap/include/plat/display.h:211: error: redeclaration of 'enum omap_display_caps'
+arch/arm/plat-omap/include/plat/display.h:212: error: redeclaration of enumerator 'OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE'
+include/video/omapdss.h:143: note: previous definition of 'OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE' was here
+arch/arm/plat-omap/include/plat/display.h:213: error: redeclaration of enumerator 'OMAP_DSS_DISPLAY_CAP_TEAR_ELIM'
+include/video/omapdss.h:144: note: previous definition of 'OMAP_DSS_DISPLAY_CAP_TEAR_ELIM' was here
+arch/arm/plat-omap/include/plat/display.h:222: error: nested redefinition of 'enum omap_dss_update_mode'
+arch/arm/plat-omap/include/plat/display.h:222: error: redeclaration of 'enum omap_dss_update_mode'
+arch/arm/plat-omap/include/plat/display.h:223: error: redeclaration of enumerator 'OMAP_DSS_UPDATE_DISABLED'
+include/video/omapdss.h:148: note: previous definition of 'OMAP_DSS_UPDATE_DISABLED' was here
+arch/arm/plat-omap/include/plat/display.h:224: error: redeclaration of enumerator 'OMAP_DSS_UPDATE_AUTO'
+include/video/omapdss.h:149: note: previous definition of 'OMAP_DSS_UPDATE_AUTO' was here
+arch/arm/plat-omap/include/plat/display.h:225: error: redeclaration of enumerator 'OMAP_DSS_UPDATE_MANUAL'
+include/video/omapdss.h:150: note: previous definition of 'OMAP_DSS_UPDATE_MANUAL' was here
+arch/arm/plat-omap/include/plat/display.h:228: error: nested redefinition of 'enum omap_dss_display_state'
+arch/arm/plat-omap/include/plat/display.h:228: error: redeclaration of 'enum omap_dss_display_state'
+arch/arm/plat-omap/include/plat/display.h:229: error: redeclaration of enumerator 'OMAP_DSS_DISPLAY_DISABLED'
+include/video/omapdss.h:154: note: previous definition of 'OMAP_DSS_DISPLAY_DISABLED' was here
+arch/arm/plat-omap/include/plat/display.h:230: error: redeclaration of enumerator 'OMAP_DSS_DISPLAY_ACTIVE'
+include/video/omapdss.h:155: note: previous definition of 'OMAP_DSS_DISPLAY_ACTIVE' was here
+arch/arm/plat-omap/include/plat/display.h:231: error: redeclaration of enumerator 'OMAP_DSS_DISPLAY_SUSPENDED'
+include/video/omapdss.h:156: note: previous definition of 'OMAP_DSS_DISPLAY_SUSPENDED' was here
+arch/arm/plat-omap/include/plat/display.h:242: error: nested redefinition of 'enum omap_dss_overlay_managers'
+arch/arm/plat-omap/include/plat/display.h:242: error: redeclaration of 'enum omap_dss_overlay_managers'
+arch/arm/plat-omap/include/plat/display.h:243: error: redeclaration of enumerator 'OMAP_DSS_OVL_MGR_LCD'
+include/video/omapdss.h:166: note: previous definition of 'OMAP_DSS_OVL_MGR_LCD' was here
+arch/arm/plat-omap/include/plat/display.h:244: error: redeclaration of enumerator 'OMAP_DSS_OVL_MGR_TV'
+include/video/omapdss.h:167: note: previous definition of 'OMAP_DSS_OVL_MGR_TV' was here
+arch/arm/plat-omap/include/plat/display.h:245: error: redeclaration of enumerator 'OMAP_DSS_OVL_MGR_LCD2'
+include/video/omapdss.h:168: note: previous definition of 'OMAP_DSS_OVL_MGR_LCD2' was here
+arch/arm/plat-omap/include/plat/display.h:248: error: nested redefinition of 'enum omap_dss_rotation_type'
+arch/arm/plat-omap/include/plat/display.h:248: error: redeclaration of 'enum omap_dss_rotation_type'
+arch/arm/plat-omap/include/plat/display.h:249: error: redeclaration of enumerator 'OMAP_DSS_ROT_DMA'
+include/video/omapdss.h:172: note: previous definition of 'OMAP_DSS_ROT_DMA' was here
+arch/arm/plat-omap/include/plat/display.h:250: error: redeclaration of enumerator 'OMAP_DSS_ROT_VRFB'
+include/video/omapdss.h:173: note: previous definition of 'OMAP_DSS_ROT_VRFB' was here
+arch/arm/plat-omap/include/plat/display.h:251: error: redeclaration of enumerator 'OMAP_DSS_ROT_TILER'
+include/video/omapdss.h:174: note: previous definition of 'OMAP_DSS_ROT_TILER' was here
+arch/arm/plat-omap/include/plat/display.h:255: error: nested redefinition of 'enum omap_dss_rotation_angle'
+arch/arm/plat-omap/include/plat/display.h:255: error: redeclaration of 'enum omap_dss_rotation_angle'
+arch/arm/plat-omap/include/plat/display.h:256: error: redeclaration of enumerator 'OMAP_DSS_ROT_0'
+include/video/omapdss.h:179: note: previous definition of 'OMAP_DSS_ROT_0' was here
+arch/arm/plat-omap/include/plat/display.h:257: error: redeclaration of enumerator 'OMAP_DSS_ROT_90'
+include/video/omapdss.h:180: note: previous definition of 'OMAP_DSS_ROT_90' was here
+arch/arm/plat-omap/include/plat/display.h:258: error: redeclaration of enumerator 'OMAP_DSS_ROT_180'
+include/video/omapdss.h:181: note: previous definition of 'OMAP_DSS_ROT_180' was here
+arch/arm/plat-omap/include/plat/display.h:259: error: redeclaration of enumerator 'OMAP_DSS_ROT_270'
+include/video/omapdss.h:182: note: previous definition of 'OMAP_DSS_ROT_270' was here
+arch/arm/plat-omap/include/plat/display.h:262: error: nested redefinition of 'enum omap_overlay_caps'
+arch/arm/plat-omap/include/plat/display.h:262: error: redeclaration of 'enum omap_overlay_caps'
+arch/arm/plat-omap/include/plat/display.h:263: error: redeclaration of enumerator 'OMAP_DSS_OVL_CAP_SCALE'
+include/video/omapdss.h:186: note: previous definition of 'OMAP_DSS_OVL_CAP_SCALE' was here
+arch/arm/plat-omap/include/plat/display.h:264: error: redeclaration of enumerator 'OMAP_DSS_OVL_CAP_DISPC'
+include/video/omapdss.h:187: note: previous definition of 'OMAP_DSS_OVL_CAP_DISPC' was here
+arch/arm/plat-omap/include/plat/display.h:267: error: nested redefinition of 'enum omap_overlay_manager_caps'
+arch/arm/plat-omap/include/plat/display.h:267: error: redeclaration of 'enum omap_overlay_manager_caps'
+arch/arm/plat-omap/include/plat/display.h:268: error: redeclaration of enumerator 'OMAP_DSS_OVL_MGR_CAP_DISPC'
+include/video/omapdss.h:191: note: previous definition of 'OMAP_DSS_OVL_MGR_CAP_DISPC' was here
+arch/arm/plat-omap/include/plat/display.h:271: error: nested redefinition of 'enum omap_overlay_zorder'
+arch/arm/plat-omap/include/plat/display.h:271: error: redeclaration of 'enum omap_overlay_zorder'
+arch/arm/plat-omap/include/plat/display.h:272: error: redeclaration of enumerator 'OMAP_DSS_OVL_ZORDER_0'
+include/video/omapdss.h:206: note: previous definition of 'OMAP_DSS_OVL_ZORDER_0' was here
+arch/arm/plat-omap/include/plat/display.h:273: error: redeclaration of enumerator 'OMAP_DSS_OVL_ZORDER_1'
+include/video/omapdss.h:207: note: previous definition of 'OMAP_DSS_OVL_ZORDER_1' was here
+arch/arm/plat-omap/include/plat/display.h:274: error: redeclaration of enumerator 'OMAP_DSS_OVL_ZORDER_2'
+include/video/omapdss.h:208: note: previous definition of 'OMAP_DSS_OVL_ZORDER_2' was here
+arch/arm/plat-omap/include/plat/display.h:275: error: redeclaration of enumerator 'OMAP_DSS_OVL_ZORDER_3'
+include/video/omapdss.h:209: note: previous definition of 'OMAP_DSS_OVL_ZORDER_3' was here
+arch/arm/plat-omap/include/plat/display.h:359: error: redefinition of 'struct rfbi_timings'
+arch/arm/plat-omap/include/plat/display.h:395: error: conflicting types for 'dsi_bus_lock'
+include/video/omapdss.h:247: note: previous declaration of 'dsi_bus_lock' was here
+arch/arm/plat-omap/include/plat/display.h:396: error: conflicting types for 'dsi_bus_unlock'
+include/video/omapdss.h:248: note: previous declaration of 'dsi_bus_unlock' was here
+arch/arm/plat-omap/include/plat/display.h:398: error: conflicting types for 'dsi_vc_dcs_write'
+include/video/omapdss.h:250: note: previous declaration of 'dsi_vc_dcs_write' was here
+arch/arm/plat-omap/include/plat/display.h:400: error: conflicting types for 'dsi_vc_dcs_write_0'
+include/video/omapdss.h:252: note: previous declaration of 'dsi_vc_dcs_write_0' was here
+arch/arm/plat-omap/include/plat/display.h:402: error: conflicting types for 'dsi_vc_dcs_write_1'
+include/video/omapdss.h:254: note: previous declaration of 'dsi_vc_dcs_write_1' was here
+arch/arm/plat-omap/include/plat/display.h:404: error: conflicting types for 'dsi_vc_dcs_write_nosync'
+include/video/omapdss.h:256: note: previous declaration of 'dsi_vc_dcs_write_nosync' was here
+arch/arm/plat-omap/include/plat/display.h:406: error: conflicting types for 'dsi_vc_dcs_read'
+include/video/omapdss.h:258: note: previous declaration of 'dsi_vc_dcs_read' was here
+arch/arm/plat-omap/include/plat/display.h:408: error: conflicting types for 'dsi_vc_dcs_read_1'
+include/video/omapdss.h:260: note: previous declaration of 'dsi_vc_dcs_read_1' was here
+arch/arm/plat-omap/include/plat/display.h:410: error: conflicting types for 'dsi_vc_dcs_read_2'
+include/video/omapdss.h:262: note: previous declaration of 'dsi_vc_dcs_read_2' was here
+arch/arm/plat-omap/include/plat/display.h:412: error: conflicting types for 'dsi_vc_set_max_rx_packet_size'
+include/video/omapdss.h:268: note: previous declaration of 'dsi_vc_set_max_rx_packet_size' was here
+arch/arm/plat-omap/include/plat/display.h:414: error: conflicting types for 'dsi_vc_send_null'
+include/video/omapdss.h:270: note: previous declaration of 'dsi_vc_send_null' was here
+arch/arm/plat-omap/include/plat/display.h:415: error: conflicting types for 'dsi_vc_send_bta_sync'
+include/video/omapdss.h:271: note: previous declaration of 'dsi_vc_send_bta_sync' was here
+arch/arm/plat-omap/include/plat/display.h:433: error: redefinition of 'struct omap_dss_board_info'
+arch/arm/plat-omap/include/plat/display.h:439: error: conflicting types for 'omap_display_init'
+include/video/omapdss.h:292: note: previous declaration of 'omap_display_init' was here
+arch/arm/plat-omap/include/plat/display.h:441: error: redefinition of 'struct omap_display_platform_data'
+arch/arm/plat-omap/include/plat/display.h:450: error: redefinition of 'struct omap_video_timings'
+arch/arm/plat-omap/include/plat/display.h:493: error: redefinition of 'struct omap_dss_cpr_coefs'
+arch/arm/plat-omap/include/plat/display.h:499: error: redefinition of 'struct omap_dss_cconv_coefs'
+arch/arm/plat-omap/include/plat/display.h:506: error: redefinition of 'struct omap_overlay_info'
+arch/arm/plat-omap/include/plat/display.h:535: error: redefinition of 'struct omap_overlay'
+arch/arm/plat-omap/include/plat/display.h:568: error: redefinition of 'struct omap_overlay_manager_info'
+arch/arm/plat-omap/include/plat/display.h:581: warning: no semicolon at end of struct or union
+arch/arm/plat-omap/include/plat/display.h:583: error: redefinition of 'struct omap_overlay_manager'
+arch/arm/plat-omap/include/plat/display.h:683: error: redefinition of 'struct omap_dss_device'
+arch/arm/plat-omap/include/plat/display.h:788: error: redefinition of 'struct omap_dss_driver'
+arch/arm/plat-omap/include/plat/display.h:883: error: conflicting types for 'omap_dss_register_driver'
+include/video/omapdss.h:687: note: previous declaration of 'omap_dss_register_driver' was here
+arch/arm/plat-omap/include/plat/display.h:884: error: conflicting types for 'omap_dss_unregister_driver'
+include/video/omapdss.h:688: note: previous declaration of 'omap_dss_unregister_driver' was here
+arch/arm/plat-omap/include/plat/display.h:889: error: conflicting types for 'omap_dss_get_device'
+include/video/omapdss.h:690: note: previous declaration of 'omap_dss_get_device' was here
+arch/arm/plat-omap/include/plat/display.h:890: error: conflicting types for 'omap_dss_put_device'
+include/video/omapdss.h:691: note: previous declaration of 'omap_dss_put_device' was here
+arch/arm/plat-omap/include/plat/display.h:892: error: conflicting types for 'omap_dss_get_next_device'
+include/video/omapdss.h:693: note: previous declaration of 'omap_dss_get_next_device' was here
+arch/arm/plat-omap/include/plat/display.h:893: error: conflicting types for 'omap_dss_find_device'
+include/video/omapdss.h:694: note: previous declaration of 'omap_dss_find_device' was here
+arch/arm/plat-omap/include/plat/display.h:896: error: conflicting types for 'omap_dss_start_device'
+include/video/omapdss.h:697: note: previous declaration of 'omap_dss_start_device' was here
+arch/arm/plat-omap/include/plat/display.h:897: error: conflicting types for 'omap_dss_stop_device'
+include/video/omapdss.h:698: note: previous declaration of 'omap_dss_stop_device' was here
+arch/arm/plat-omap/include/plat/display.h:913: error: conflicting types for 'omap_dss_manager_unregister_callback'
+include/video/omapdss.h:765: note: previous declaration of 'omap_dss_manager_unregister_callback' was here
+arch/arm/plat-omap/include/plat/display.h:917: error: conflicting types for 'omap_dss_get_overlay_manager'
+include/video/omapdss.h:701: note: previous declaration of 'omap_dss_get_overlay_manager' was here
+arch/arm/plat-omap/include/plat/display.h: In function 'dssdev_manually_updated':
+arch/arm/plat-omap/include/plat/display.h:922: warning: passing argument 1 of 'dev->driver->get_update_mode' from incompatible pointer type
+arch/arm/plat-omap/include/plat/display.h:922: note: expected 'struct omap_dss_device *' but argument is of type 'struct omap_dss_device *'
+arch/arm/plat-omap/include/plat/display.h: At top level:
+arch/arm/plat-omap/include/plat/display.h:926: error: conflicting types for 'omap_dss_get_overlay'
+include/video/omapdss.h:704: note: previous declaration of 'omap_dss_get_overlay' was here
+arch/arm/plat-omap/include/plat/display.h:929: error: conflicting types for 'omapdss_default_get_resolution'
+include/video/omapdss.h:706: note: previous declaration of 'omapdss_default_get_resolution' was here
+arch/arm/plat-omap/include/plat/display.h:931: error: conflicting types for 'omapdss_default_get_recommended_bpp'
+include/video/omapdss.h:708: note: previous declaration of 'omapdss_default_get_recommended_bpp' was here
+arch/arm/plat-omap/include/plat/display.h:935: error: redefinition of typedef 'omap_dispc_isr_t'
+include/video/omapdss.h:710: note: previous declaration of 'omap_dispc_isr_t' was here
+arch/arm/plat-omap/include/plat/display.h:949: error: conflicting types for 'omapdss_dsi_vc_enable_hs'
+include/video/omapdss.h:726: note: previous declaration of 'omapdss_dsi_vc_enable_hs' was here
+arch/arm/plat-omap/include/plat/display.h:951: error: conflicting types for 'omapdss_dsi_enable_te'
+include/video/omapdss.h:728: note: previous declaration of 'omapdss_dsi_enable_te' was here
+arch/arm/plat-omap/include/plat/display.h:955: error: conflicting types for 'omap_dsi_prepare_update'
+include/video/omapdss.h:730: note: previous declaration of 'omap_dsi_prepare_update' was here
+arch/arm/plat-omap/include/plat/display.h:958: error: conflicting types for 'omap_dsi_update'
+include/video/omapdss.h:733: note: previous declaration of 'omap_dsi_update' was here
+arch/arm/plat-omap/include/plat/display.h:963: error: conflicting types for 'omapdss_dsi_display_enable'
+include/video/omapdss.h:741: note: previous declaration of 'omapdss_dsi_display_enable' was here
+arch/arm/plat-omap/include/plat/display.h:964: error: conflicting types for 'omapdss_dsi_display_disable'
+include/video/omapdss.h:742: note: previous declaration of 'omapdss_dsi_display_disable' was here
+arch/arm/plat-omap/include/plat/display.h:967: error: conflicting types for 'omapdss_dpi_display_enable'
+include/video/omapdss.h:745: note: previous declaration of 'omapdss_dpi_display_enable' was here
+arch/arm/plat-omap/include/plat/display.h:968: error: conflicting types for 'omapdss_dpi_display_disable'
+include/video/omapdss.h:746: note: previous declaration of 'omapdss_dpi_display_disable' was here
+arch/arm/plat-omap/include/plat/display.h:969: error: conflicting types for 'dpi_set_timings'
+include/video/omapdss.h:747: note: previous declaration of 'dpi_set_timings' was here
+arch/arm/plat-omap/include/plat/display.h:971: error: conflicting types for 'dpi_check_timings'
+include/video/omapdss.h:749: note: previous declaration of 'dpi_check_timings' was here
+arch/arm/plat-omap/include/plat/display.h:974: error: conflicting types for 'omapdss_sdi_display_enable'
+include/video/omapdss.h:752: note: previous declaration of 'omapdss_sdi_display_enable' was here
+arch/arm/plat-omap/include/plat/display.h:975: error: conflicting types for 'omapdss_sdi_display_disable'
+include/video/omapdss.h:753: note: previous declaration of 'omapdss_sdi_display_disable' was here
+arch/arm/plat-omap/include/plat/display.h:977: error: conflicting types for 'omapdss_rfbi_display_enable'
+include/video/omapdss.h:755: note: previous declaration of 'omapdss_rfbi_display_enable' was here
+arch/arm/plat-omap/include/plat/display.h:978: error: conflicting types for 'omapdss_rfbi_display_disable'
+include/video/omapdss.h:756: note: previous declaration of 'omapdss_rfbi_display_disable' was here
+arch/arm/plat-omap/include/plat/display.h:979: error: conflicting types for 'omap_rfbi_prepare_update'
+include/video/omapdss.h:757: note: previous declaration of 'omap_rfbi_prepare_update' was here
+arch/arm/plat-omap/include/plat/display.h:981: error: conflicting types for 'omap_rfbi_update'
+include/video/omapdss.h:759: note: previous declaration of 'omap_rfbi_update' was here
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c: In function 'OMAPLFBGetUpdateMode':
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:509: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:510: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c: In function 'OMAPLFBSetUpdateMode':
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:592: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:593: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c: In function 'OMAPLFBWaitForVSync':
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:633: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c: In function 'OMAPLFBManualSync':
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:667: warning: initialization from incompatible pointer type
+drivers/gpu/pvr/omaplfb/omaplfb_linux.c:668: warning: initialization from incompatible pointer type
+make[3]: *** [drivers/gpu/pvr/omaplfb/omaplfb_linux.o] Fehler 1
+make[2]: *** [drivers/gpu/pvr] Fehler 2
+make[1]: *** [drivers/gpu] Fehler 2
+make: *** [drivers] Fehler 2
