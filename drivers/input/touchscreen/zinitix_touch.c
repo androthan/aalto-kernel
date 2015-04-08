@@ -1292,26 +1292,7 @@ retry_init:
 
 	if (ts_read_data(touch_dev->client, ZINITIX_DATA_VERSION_REG, (u8*)&chip_reg_data_version, 2)<0) goto fail_init;
 	zinitix_debug_msg("touch reg data version = %d\r\n", chip_reg_data_version);
-#if	0
-	if(chip_reg_data_version < m_reg_data[ZINITIX_DATA_VERSION_REG].reg_val)
-	{
-		zinitix_debug_msg("write new reg data( %d < %d)\r\n", chip_reg_data_version, m_reg_data[ZINITIX_DATA_VERSION_REG].reg_val);
-		for(i=0; i < MAX_REG_COUNT; i++)
-		{
-			if(m_reg_data[i].valid == 1)
-			{
-				if(ts_write_reg(touch_dev->client, (u16)i, (u16)(m_reg_data[i].reg_val))!=I2C_SUCCESS) goto fail_init;
-				if(i == ZINITIX_TOTAL_NUMBER_OF_X || i == ZINITIX_TOTAL_NUMBER_OF_Y)	mdelay(50);	//for clear hw calibration bit
-				if(ts_read_data(touch_dev->client, (u16)i, (u8*)&stmp, 2)<0) goto fail_init;
-				if(memcmp((char*)&m_reg_data[i].reg_val, (char*)&stmp, 2)!=0)		//if(m_reg_data[i].reg_val != stmp)
-					printk("register data is different. (addr = 0x%02X , %d != %d)\r\n", i, m_reg_data[i].reg_val, stmp);					
-			}
-		}
-		zinitix_debug_msg("done new reg data( %d < %d)\r\n", chip_reg_data_version, m_reg_data[ZINITIX_DATA_VERSION_REG].reg_val);		
-		if (ts_write_cmd(touch_dev->client, ZINITIX_SAVE_STATUS_CMD)!=I2C_SUCCESS) goto fail_init;			
-		mdelay(1000);	// for fusing eeprom
-	}
-#endif
+
 	if (ts_read_data(touch_dev->client, ZINITIX_EEPROM_INFO_REG, (u8*)&chip_eeprom_info, 2)<0) goto fail_init;
 	zinitix_debug_msg("touch eeprom info = 0x%04X\r\n", chip_eeprom_info);
 
@@ -1395,7 +1376,7 @@ retry_init:
 	if (ts_read_data(touch_dev->client, ZINITIX_SUPPORTED_FINGER_NUM, (u8*)&CurSupportedFingerNum, 2)<0) goto fail_init;
 	zinitix_debug_msg("max supported finger num = %d, real supported finger num = %d\r\n", CurSupportedFingerNum, REAL_SUPPORTED_FINGER_NUM); 	
 		
-	touch_dev->cap_info.gesture_support = 0;
+	touch_dev->cap_info.gesture_support = 1;  //INCREASE sensitivity?
 	touch_dev->cap_info.multi_fingers = REAL_SUPPORTED_FINGER_NUM;
     		
 	zinitix_debug_msg("set other configuration\r\n");

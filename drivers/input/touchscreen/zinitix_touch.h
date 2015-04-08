@@ -29,7 +29,7 @@
 #define	TS_DRVIER_VERSION	"3.0.10"
 
 // select touch mode	// 1 is recommended
-#define	TOUCH_MODE				0
+#define	TOUCH_MODE				1   //EXPERIMENTAL
 
 // max 10
 #define	MAX_SUPPORTED_FINGER_NUM			10
