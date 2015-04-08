@@ -2897,12 +2897,28 @@ static int twl4030_set_fmradio_path(struct snd_kcontrol *kcontrol, struct snd_ct
 			twl4030_write(codec, 0x25,0x24);   //TWL4030_PREDL_CTL
 		break;
 
-		case HP3P:
+		case HP3P: //always to spk_out -- adrt.15        #2
+			twl4030_write(codec, 0x22,0x24);   //TWL4030_PREDR_CTL
+			twl4030_write(codec, 0x24,0x41);   //TWL4030_PREDL_CTL
+			twl4030_write(codec, 0x24,0x42);   //TWL4030_PREDL_CTL
+
 		case HP4P:
 			twl4030_write(codec, 0x22,0x24);   //TWL4030_PREDR_CTL
 			twl4030_write(codec, 0x24,0x41);   //TWL4030_PREDL_CTL
 			twl4030_write(codec, 0x24,0x42);   //TWL4030_PREDL_CTL
 		break;
+
+		case BT:
+		break;
+
+		case SPK_HP:
+		break;
+
+
+		case HP: //always to spk_out -- adrt.15
+			twl4030_write(codec, 0x22,0x24);   //TWL4030_PREDR_CTL
+			twl4030_write(codec, 0x24,0x41);   //TWL4030_PREDL_CTL
+			twl4030_write(codec, 0x24,0x42);   //TWL4030_PREDL_CTL
 
 		default:
 			printk("!!!!fmradio path setting failed!!!\n");

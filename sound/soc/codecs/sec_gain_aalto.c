@@ -1,3 +1,14 @@
+/* Audio codec driver for SAMSUNG YP-GS1 (Aalto board)
+ * Samsung Electronics, opensource.samsung.com, 2011
+ *  Androthan< androthan<at>gmail<dot>com, 2015
+ */
+
+// CHANGELOG
+// : INITIAL release
+// : 07/04/2015: Output to SPK for FM
+
+/* GPL */
+
 
 #include <sound/soc.h>
 #include <linux/slab.h>
@@ -57,8 +68,8 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 			case HP4P: 
 				if(!get_sec_gain_test_mode()){
 					//Comon
-					twl4030_write(codec, 0x12, music_ear_gain[0]); // ARXR2PGA (fine[0:5], Corse[6:7])
-					twl4030_write(codec, 0x13, music_ear_gain[1]); // ARXL2PGA (fine[0:5], Corse[6:7])
+					twl4030_write(codec, 0x12, music_ear_gain[0]); 
+					twl4030_write(codec, 0x13, music_ear_gain[1]); 
 					twl4030_modify(codec, 0x1b, music_ear_gain[2], ARX_APGA_GAIN_MASK); //ARXL2_APGA_CTL [3:7]
 					twl4030_modify(codec, 0x1C, music_ear_gain[3], ARX_APGA_GAIN_MASK); //ARXR2_APGA_CTL [3:7]
 
@@ -67,12 +78,12 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				}
 #if defined(APPLY_AUDIOTEST_APP) && defined(APPLY_GAIN_INIT_FROM_INI)
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/MusicEar.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/MusicEar.ini", 0);
 #elif defined(APPLY_AUDIOTEST_APP)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/MusicEar.ini", 0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/MusicEar.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/MusicEar.ini", 0);
 #endif
 				break;
 			case SPK: 
@@ -94,12 +105,12 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				}
 #if defined(APPLY_AUDIOTEST_APP) && defined(APPLY_GAIN_INIT_FROM_INI)
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/MusicSpk.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/MusicSpk.ini", 0);
 #elif defined(APPLY_AUDIOTEST_APP)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/MusicSpk.ini", 0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/MusicSpk.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/MusicSpk.ini", 0);
 #endif
 				break;
 			case OFF:
@@ -117,7 +128,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 
 	
 			case BT: 
-				//Comon
+				// Supported by userspace --- adrt.15
 				printk("TWL4030 doese NOT Support BT Play");
 				break;
 			default:
@@ -152,12 +163,12 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 						if(!get_sec_gain_test_mode())
 							twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceRecMainMic.ini", 0);
 						else
-							twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceRecMainMic.ini", 0);
+							twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceRecMainMic.ini", 0);
 					}else{
 						if(!get_sec_gain_test_mode())
 							twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/RecMainMic.ini", 0);
 						else
-							twl4030_set_reg_from_file(codec, "/sdcard/external_sd/RecMainMic.ini", 0);
+							twl4030_set_reg_from_file(codec, "/storage/sdcard1/RecMainMic.ini", 0);
 					}
 #endif
 				break;
@@ -181,7 +192,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/RecMainMic.ini", 0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/RecMainMic.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/RecMainMic.ini", 0);
 				
 #endif
 				break;
@@ -207,16 +218,16 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 					if(!get_sec_gain_test_mode())
 						twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceRecHeadSetMic.ini", 0);
 					else
-						twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceRecHeadSetMic.ini", 0);
+						twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceRecHeadSetMic.ini", 0);
 				}else{
 					if(!get_sec_gain_test_mode())
 						twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/RecHeadSetMic.ini", 0);
 					else
-						twl4030_set_reg_from_file(codec, "/sdcard/external_sd/RecHeadSetMic.ini", 0);
+						twl4030_set_reg_from_file(codec, "/storage/sdcard1/RecHeadSetMic.ini", 0);
 				}
 #endif
 				break;
-			case BT_MIC: 
+			case BT_MIC: // ?
 				printk("TWL4030 doese NOT support BT Mic Recording");
 				break;
 			default:
@@ -230,7 +241,6 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 			case OFF:
 				break;
 			case RCV: 
-				//play when voice
 				twl4030_write(codec, 0x12, (0x2 << 6) | 0x39); // ARXR2PGA (fine[0:5], Corse[6:7])
 				twl4030_write(codec, 0x13, (0x2 << 6) | 0x39); // ARXL2PGA (fine[0:5], Corse[6:7])
 				
@@ -255,7 +265,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallRcv.ini", 1);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceCallRcv.ini", 1);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceCallRcv.ini", 1);
 #endif				
 				break;
 			case SPK: 
@@ -286,7 +296,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallSpk.ini",2);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceCallSpk.ini", 2);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceCallSpk.ini", 2);
 #endif				
 				break;
 			case HP3P: 
@@ -313,7 +323,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCall3pEar.ini",3);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceCall3pEar.ini", 3);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceCall3pEar.ini", 3);
 #endif				
 				break;
 			case HP4P: 
@@ -340,7 +350,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCall4pEar.ini",3);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceCall4pEar.ini", 3);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceCall4pEar.ini", 3);
 #endif	
 
 				break;
@@ -351,7 +361,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallBT.ini",0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VoiceCallBT.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VoiceCallBT.ini", 0);
 #endif
 				break;
 			default:
@@ -365,7 +375,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 			case OFF:
 				break;
 			case RCV: 
-				//play when voice
+				// Voice recognition
 				twl4030_write(codec, 0x12, (0x2 << 6) | 0x39); // ARXR2PGA (fine[0:5], Corse[6:7])
 				twl4030_write(codec, 0x13, (0x2 << 6) | 0x39); // ARXL2PGA (fine[0:5], Corse[6:7])
 				
@@ -390,7 +400,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallRcv.ini", 1);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VtCallRcv.ini", 1);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCallRcv.ini", 1);
 #endif				
 				break;
 			case SPK: 
@@ -421,7 +431,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallSpk.ini", 2);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VtCallSpk.ini", 2);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCallSpk.ini", 2);
 #endif				
 				break;
 			case HP3P: 
@@ -448,7 +458,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCall3pEar.ini", 3);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VtCall3pEar.ini", 3);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCall3pEar.ini", 3);
 #endif				
 				break;
 			case HP4P: 
@@ -475,7 +485,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCall4pEar.ini", 3);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VtCall4pEar.ini", 3);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCall4pEar.ini", 3);
 #endif	
 				break;
 			case BT: 
@@ -485,7 +495,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallBT.ini", 0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/VtCallBT.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCallBT.ini", 0);
 #endif
 				break;
 			default:
@@ -561,7 +571,7 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 				twl4030_write(codec, 0x23, (0x1 << 2)|0x1); //HS_GAIN(L[0:1], R[2:3])
 				break;
 			case BT: 
-				printk("voip bt not supported\n");
+				printk("Voice over IP not supported on BT\n");
 				break;
 			default:
 				break;
@@ -573,56 +583,106 @@ void set_codec_gain(struct snd_soc_codec *codec, int mode, int device)
 		{
 			case OFF:
 				break;
-			case SPK: 
-				//play
-				twl4030_write(codec, 0x12, (0x2 << 6) | 0x3f); // ARXR2PGA (fine[0:5], Corse[6:7])
-				twl4030_write(codec, 0x13, (0x2 << 6) | 0x3f); // ARXL2PGA (fine[0:5], Corse[6:7])
-
-#ifndef APPLY_AUDIOTEST_APP				
-				//tx common
-				twl4030_write(codec, 0x48, (0x4 << 3) | 0x4); // ANAMIC_GAIN (L[0:2], R[3:5])				
-
-				//RX common
-				twl4030_modify(codec, 0x1b, (0x9 << 3), ARX_APGA_GAIN_MASK); //ARXL2_APGA_CTL [3:7]
-				twl4030_modify(codec, 0x1C, (0x9 << 3), ARX_APGA_GAIN_MASK); //ARXR2_APGA_CTL [3:7]
-
-				//RX depend output
-				twl4030_modify(codec, 0x25, (0x3 << 4), PREDL_CTL_GAIN_MASK); //PREDL_CTL [4:5]
-				twl4030_modify(codec, 0x26, (0x3 << 4), PREDL_CTL_GAIN_MASK); //PREDR_CTL[4:5]
-#else
-				if(!get_sec_gain_test_mode())
-					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/FMRadioSpk.ini", 0);
-				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/FMRadioSpk.ini", 0);
-#endif
-				break;
-			case HP3P: 
-			case HP4P: 
-				//play
-				twl4030_write(codec, 0x12, (0x2 << 6) | 0x30); // ARXR2PGA (fine[0:5], Corse[6:7])
-				twl4030_write(codec, 0x13, (0x2 << 6) | 0x30); // ARXL2PGA (fine[0:5], Corse[6:7])
+			case SPK:
+/* ALWAYS redirect FM radio to loudspeaker! (Fix for SpiritFM?) --- adrt.15 */
+				//playback
+				twl4030_write(codec, 0x12, (0x2 << 6) | 0x30);
+				twl4030_write(codec, 0x13, (0x2 << 6) | 0x30);
 				
 #ifndef APPLY_AUDIOTEST_APP	
-				//tx common
-				//twl4030_write(codec, 0x48, (0x4 << 3) | 0x4); // ANAMIC_GAIN (L[0:2], R[3:5])				
-				twl4030_write(codec, 0x48, 0x12); // ANAMIC_GAIN (L[0:2], R[3:5])				
+				//tx common			
+				twl4030_write(codec, 0x48, 0x12);			
 
 				//RX common
-//				twl4030_modify(codec, 0x1b, (0xd << 3), ARX_APGA_GAIN_MASK); //ARXL2_APGA_CTL [3:7]
-//				twl4030_modify(codec, 0x1C, (0xd << 3), ARX_APGA_GAIN_MASK); //ARXR2_APGA_CTL [3:7]
 				twl4030_write(codec, 0x1b, 0x57); //ARXL2_APGA_CTL [3:7]	
 				twl4030_write(codec, 0x1C, 0x57); //ARXR2_APGA_CTL [3:7]
 				
 				//RX depend output
-				//twl4030_write(codec, 0x23, (0x1 << 2)|0x1); //HS_GAIN(L[0:1], R[2:3])
-				twl4030_write(codec, 0x23, 0x5); //HS_GAIN(L[0:1], R[2:3])
+				twl4030_write(codec, 0x23, 0x5);
 #else
 				if(!get_sec_gain_test_mode())
 					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/FMRadioEar.ini", 0);
 				else
-					twl4030_set_reg_from_file(codec, "/sdcard/external_sd/FMRadioEar.ini", 0);
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/FMRadioEar.ini", 0);
 #endif
 				break;
+			case HP: 
+				//playback
+				twl4030_write(codec, 0x12, (0x2 << 6) | 0x30);
+				twl4030_write(codec, 0x13, (0x2 << 6) | 0x30);
+				
+#ifndef APPLY_AUDIOTEST_APP	
+				//tx common			
+				twl4030_write(codec, 0x48, 0x12);			
+
+				//RX common
+				twl4030_write(codec, 0x1b, 0x57); //ARXL2_APGA_CTL [3:7]	
+				twl4030_write(codec, 0x1C, 0x57); //ARXR2_APGA_CTL [3:7]
+				
+				//RX depend output
+				twl4030_write(codec, 0x23, 0x5);
+#else
+				if(!get_sec_gain_test_mode())
+					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/FMRadioEar.ini", 0);
+				else
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/FMRadioEar.ini", 0);
+#endif
+				break;
+			case HP3P:  // play also 
+				//play
+				twl4030_write(codec, 0x12, (0x2 << 6) | 0x30);
+				twl4030_write(codec, 0x13, (0x2 << 6) | 0x30);
+				
+#ifndef APPLY_AUDIOTEST_APP	
+				//tx common			
+				twl4030_write(codec, 0x48, 0x12);			
+
+				//RX common
+				twl4030_write(codec, 0x1b, 0x57); //ARXL2_APGA_CTL [3:7]	
+				twl4030_write(codec, 0x1C, 0x57); //ARXR2_APGA_CTL [3:7]
+				
+				//RX depend output
+				twl4030_write(codec, 0x23, 0x5);
+#else
+				if(!get_sec_gain_test_mode())
+					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/FMRadioEar.ini", 0);
+				else
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/FMRadioEar.ini", 0);
+#endif
+			case HP4P: 
+				//playback
+				twl4030_write(codec, 0x12, (0x2 << 6) | 0x30);
+				twl4030_write(codec, 0x13, (0x2 << 6) | 0x30);
+				
+#ifndef APPLY_AUDIOTEST_APP	
+				//tx common			
+				twl4030_write(codec, 0x48, 0x12);			
+
+				//RX common
+				twl4030_write(codec, 0x1b, 0x57); //ARXL2_APGA_CTL [3:7]	
+				twl4030_write(codec, 0x1C, 0x57); //ARXR2_APGA_CTL [3:7]
+				
+				//RX depend output
+				twl4030_write(codec, 0x23, 0x5);
+#else
+				if(!get_sec_gain_test_mode())
+					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/FMRadioEar.ini", 0);
+				else
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/FMRadioEar.ini", 0);
+#endif
+				break;
+
+			case BT: //EXPERIMENTAL (FIXME)
+#ifndef APPLY_AUDIOTEST_APP
+				twl4030_write(codec, 0x1F, (0x5 << 4)| 0x5); //BTPGA(RX[0:3], Tx[4:7])
+#else
+				if(!get_sec_gain_test_mode())
+					twl4030_set_reg_from_file(codec, "/system/etc/audio/codec/VoiceCallBT.ini", 0);
+				else
+					twl4030_set_reg_from_file(codec, "/storage/sdcard1/VtCallBT.ini", 0);
+#endif
+				break;
+
 			default:
 				break;
 		}		
@@ -636,7 +696,6 @@ static char StringToHexFor16Bit( char *ss )
 	int i = 0 ;
 	u8 val = 0;
 
-	//printk( "[audio gain] 0x%x, 0x%x!!\n",ss[0], ss[1]);
 
 	for ( i = 0 ; i < 2 ; i++ )
 	{	 
