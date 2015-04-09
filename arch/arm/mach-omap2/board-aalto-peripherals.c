@@ -39,6 +39,7 @@
 #include <linux/mmc/host.h>
 #include <linux/leds.h>
 #include "twl4030.h"
+#include <linux/wakelock.h>
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -70,6 +71,11 @@
 #include "../../../drivers/media/video/s5ka3dfx.h"
 #include "../../../drivers/media/video/s5k4ca.h"
 #endif
+
+// BT wakelock -- adrt.15
+#define BLUETOOTH_UART UART2
+
+static struct wake_lock uart_lock;
 
 #ifdef AALTO_CAM	// For cam driver 18.10.2011 (jinokang)
 //struct ce147_platform_data omap_board_ce147_platform_data;
@@ -126,6 +132,21 @@ static struct gpio_switch_platform_data headset_switch_data = {
 	.name = "h2w",
 	.gpio = OMAP_GPIO_DET_3_5,	/* Omap3430 GPIO_27 For samsung zeus */
 };
+
+/* Bluetooth wakelock 
+ * Hold connection active when device is not in use.
+ * Fixes issues when sending big files
+ * adrt.15
+ * ORIGIN: https://github.com/dhiru1602/samsung-kernel-latona/commit/a008e2dff295cc0c9a5ada57aae15f3a2eccba2a */
+static void plat_hold_wakelock(void *up, int flag)
+{
+	struct uart_omap_port *up2 = (struct uart_omap_port *)up;
+
+	/* Specific wakelock for bluetooth usecases */
+	if ((up2->pdev->id == BLUETOOTH_UART)
+	&& ((flag == WAKELK_TX) || (flag == WAKELK_RX)))
+	wake_lock_timeout(&uart_lock, 2*HZ);
+}
 
 static struct platform_device headset_switch_device = {
 	.name = "switch-gpio",
@@ -1347,6 +1368,7 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
                 .dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
                 .idle_timeout   = DEFAULT_IDLE_TIMEOUT,
                 .flags          = 1,
+		.plat_hold_wakelock = NULL,
         },
         {
                 .use_dma        = 0,
@@ -1355,6 +1377,7 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
                 .dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
                 .idle_timeout   = DEFAULT_IDLE_TIMEOUT,
                 .flags          = 1,
+		.plat_hold_wakelock = NULL,
         },
         {
                 .use_dma        = 0,
@@ -1363,6 +1386,7 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
                 .dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
                .idle_timeout   = DEFAULT_IDLE_TIMEOUT,
                 .flags          = 1,
+		.plat_hold_wakelock = NULL,
         },
         {
                 .use_dma        = 0,
@@ -1371,6 +1395,7 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
                 .dma_rx_timeout = DEFAULT_RXDMA_TIMEOUT,
                 .idle_timeout   = DEFAULT_IDLE_TIMEOUT,
                 .flags          = 1,
+		.plat_hold_wakelock = NULL,
         },
         {
                 .flags          = 0
@@ -1388,6 +1413,7 @@ static void enable_board_wakeup_source(void)
 void __init omap_board_peripherals_init(void)
 {
 	printk("*******board_peripherals_init*****\n");
+	wake_lock_init(&uart_lock, WAKE_LOCK_SUSPEND, "uart_wake_lock"); //BT wakelock -- adrt.15
 	twl4030_get_scripts(&aalto_t2scripts_data);
 
 	omap_i2c_init();
